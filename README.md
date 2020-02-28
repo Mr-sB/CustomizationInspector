@@ -20,5 +20,5 @@ Customized unity inspector and serializable dictionary
 
 ![image](https://github.com/Mr-sB/CustomizationInspector/blob/master/Screenshots/ReorderableExample.png)
 ## Thanks
-Thanks for cfoulston/Unity-Reorderable-List to provide ReorderableList function.
+Thanks for cfoulston/Unity-Reorderable-List providing ReorderableList function.
 https://github.com/cfoulston/Unity-Reorderable-List
