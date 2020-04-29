@@ -9,6 +9,7 @@ namespace CustomizationInspector.Runtime
     public class SerializableArray<T> : IList<T>
     {
         [SerializeField] private List<T> list;
+        public List<T> List => list;
 
         public SerializableArray()
         {
@@ -90,6 +91,11 @@ namespace CustomizationInspector.Runtime
         IEnumerator IEnumerable.GetEnumerator()
         {
             return list.GetEnumerator();
+        }
+
+        public static implicit operator List<T>(SerializableArray<T> array)
+        {
+            return array.list;
         }
     }
 
