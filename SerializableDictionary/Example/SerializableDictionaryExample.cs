@@ -8,7 +8,7 @@ namespace CustomizationInspector.Example
     {
         public SerializableDictionaryIntFloat IntFloatDict;
         public SerializableDictionaryStringGameObject StringGameObjectDict;
-        public SerializableDictionaryTransformCustumClass TransformCustumClassDict;
+        public SerializableDictionaryTransformCustomClass transformCustomClassDict;
 
         [Serializable]
         public class SerializableDictionaryIntFloat : SerializableDictionary<int, float>
@@ -21,7 +21,7 @@ namespace CustomizationInspector.Example
         }
 
         [Serializable]
-        public class SerializableDictionaryTransformCustumClass : SerializableDictionary<Transform, CustomClass>
+        public class SerializableDictionaryTransformCustomClass : SerializableDictionary<Transform, CustomClass>
         {
         }
 
