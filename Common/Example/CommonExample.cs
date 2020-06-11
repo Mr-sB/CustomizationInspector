@@ -31,5 +31,44 @@ namespace CustomizationInspector.Example
         {
             Debug.LogError(nameof(TestButton));
         }
+        
+        [Button(null, 2, "str")]
+        private void TestButtonWithParameter1(int a, string b)
+        {
+            Debug.LogError(nameof(TestButtonWithParameter1) + ": " + a + ", " + b);
+        }
+        
+        [Button(null, new []{1,2,3})]
+        private void TestButtonWithParameter2(int[] array)
+        {
+            if (array == null)
+            {
+                Debug.LogError(nameof(TestButtonWithParameter2) + ": " + "null");
+                return;
+            }
+            Debug.LogError(nameof(TestButtonWithParameter2) + ": " + string.Join(",", array));
+        }
+        
+        [Button(null, new object[]{null})]
+        private void TestButtonWithParameter3(int[] array)
+        {
+            if (array == null)
+            {
+                Debug.LogError(nameof(TestButtonWithParameter3) + ": " + "null");
+                return;
+            }
+            Debug.LogError(nameof(TestButtonWithParameter3) + ": " + string.Join(",", array));
+        }
+        
+        [Button(null, new []{4,5,6})]
+        private void TestButtonWithParameter4(params int[] array)
+        {
+            if (array == null)
+            {
+                Debug.LogError(nameof(TestButtonWithParameter4) + ": " + "null");
+                return;
+            }
+            Debug.LogError(nameof(TestButtonWithParameter4) + ": " + string.Join(",", array));
+        }
     }
 }

@@ -15,13 +15,12 @@ namespace CustomizationInspector.Runtime
 	{
 
 		public readonly string ShowName;
-		public ButtonAttribute(string showName)
+		public readonly object[] Params;
+
+		public ButtonAttribute(string showName = null, params object[] parameters)
 		{
 			ShowName = showName;
-		}
-		public ButtonAttribute()
-		{
-			ShowName = null;
+			Params = parameters;
 		}
 	}
 

@@ -50,35 +50,28 @@ namespace CustomizationInspector.Editor
 		public static void MethodAttribute(Type targetType, object target)
 		{
 			MethodInfo[] methodInfos = targetType.GetMethods(flag);
-			Type attributeType;
 			foreach (var info in methodInfos)
 			{
 				object[] attributes = info.GetCustomAttributes(true);
 				foreach (Attribute attribute in attributes)
 				{
-					attributeType = attribute.GetType();
-					switch (attributeType.Name)
+					if (attribute is ButtonAttribute buttonAttribute)
 					{
-						case nameof(ButtonAttribute)://nameof(ButtonAttribute) Equals "ButtonAttribute"
-							string desc = (attribute as ButtonAttribute).ShowName;
-							if (desc == null)
-								desc = info.Name;
-							if (GUILayout.Button(desc))
+						string desc = buttonAttribute.ShowName ?? info.Name;
+						if (GUILayout.Button(desc))
+						{
+							try
 							{
-								try
-								{
-									info.Invoke(target, null);
-								}
-								catch(Exception e)
-								{
-									if (target is UnityEngine.Object)
-										Debug.LogError(string.Format("不能将ButtonAttribute用于修饰有参数的函数{0}!", info.Name), target as UnityEngine.Object);
-									else
-										Debug.LogError(string.Format("不能将ButtonAttribute用于修饰有参数的函数{0}!", info.Name));
-									Debug.LogError(e);
-								}
+								info.Invoke(target, buttonAttribute.Params);
 							}
-							break;
+							catch (Exception e)
+							{
+								if (target is UnityEngine.Object context)
+									Debug.LogError(e, context);
+								else
+									Debug.LogError(e);
+							}
+						}
 					}
 				}
 			}
