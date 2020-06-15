@@ -209,6 +209,7 @@ namespace CustomizationInspector.Editor
 			{
 				try
 				{
+					Undo.RecordObject(target, target.name);
 					fieldInfo.SetValue(target, targetValue[selectedIndex]);
 				}
 				catch (Exception e)

@@ -4,8 +4,8 @@ using System.IO;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using UnityEditor;
+using UnityEditor.Experimental.SceneManagement;
 using UnityEditor.SceneManagement;
-using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace CustomizationInspector.Editor
@@ -113,12 +113,23 @@ namespace CustomizationInspector.Editor
 				return;
 			}
 
-			UnityEditor.EditorUtility.SetDirty(obj);
-			if (!UnityEditor.EditorUtility.IsPersistent(obj))
+			EditorUtility.SetDirty(obj);
+			if (!EditorUtility.IsPersistent(obj))
 			{
 				EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
 				return;
 			}
+		}
+		
+		public static bool IsEditPrefab()
+		{
+			return TryGetCurrentPrefabStage(out var prefabStage);
+		}
+
+		public static bool TryGetCurrentPrefabStage(out PrefabStage prefabStage)
+		{
+			prefabStage = PrefabStageUtility.GetCurrentPrefabStage();
+			return prefabStage != null;
 		}
 	}
 }
