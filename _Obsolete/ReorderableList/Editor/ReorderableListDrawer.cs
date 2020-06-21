@@ -10,7 +10,7 @@
 //	[CustomPropertyDrawer(typeof(ReorderableListBase), true)]
 //	public class ReorderableListDrawer : PropertyDrawer
 //	{
-//		private ReorderableList mList; 
+//		private ReorderableList mList;
 //		public static BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
 //
 //		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
