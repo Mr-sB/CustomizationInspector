@@ -1,30 +1,30 @@
 using GameUtil.Extensions;
+using UnityEditor;
 using UnityEngine;
 
-namespace UnityEditor
+namespace CustomizationInspector.Editor
 {
-    [CustomPropertyDrawer(typeof(AnimationCurve))]
+    [CustomPropertyDrawer(typeof(UnityEngine.AnimationCurve))]
     public class AnimationCurveDrawer : PropertyDrawer
     {
-        private static readonly float mButtonWidth = 20;
+        private const float BUTTON_WIDTH = 20;
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
-            var pos = position;
-            pos.width -= (mButtonWidth + 2) * 2;
-            EditorGUI.PropertyField(pos, property, label, true);
-            pos.x = pos.xMax + 2;
-            pos.width = mButtonWidth;
-            if (GUI.Button(pos,  "C"))
+            position.width -= (BUTTON_WIDTH + 2) * 2;
+            EditorGUI.PropertyField(position, property, label, true);
+            position.x = position.xMax + 2;
+            position.width = BUTTON_WIDTH;
+            if (GUI.Button(position,  "C"))
             {
-                GUIUtility.systemCopyBuffer = property.animationCurveValue.keys.KeyframeArrayToJson();
+                GUIUtility.systemCopyBuffer = property.animationCurveValue.AnimationCurveToJson();
             }
-            pos.x = pos.xMax + 2;
-            if (GUI.Button(pos, "P"))
+            position.x = position.xMax + 2;
+            if (GUI.Button(position, "P"))
             {
-                var keyframes = UnityExtensions.KeyframeArrayFromJson(GUIUtility.systemCopyBuffer);
-                if(keyframes == null) return;
+                var curve = UnityExtensions.AnimationCurveFromJson(GUIUtility.systemCopyBuffer);
+                if(curve == null) return;
                 Undo.RecordObject(property.serializedObject.targetObject, "PasteCurve");
-                property.animationCurveValue = new AnimationCurve(keyframes);
+                property.animationCurveValue = curve;
             }
         }
 
