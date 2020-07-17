@@ -38,6 +38,8 @@ namespace CustomizationInspector.Example
             Debug.LogError(nameof(TestButtonWithParameter1) + ": " + a + ", " + b);
         }
         
+#if UNITY_EDITOR
+        //IL2CPP does not support attributes with object arguments that are array types. But Mono support.
         [Button(null, new []{1,2,3})]
         private void TestButtonWithParameter2(int[] array)
         {
@@ -70,5 +72,6 @@ namespace CustomizationInspector.Example
             }
             Debug.LogError(nameof(TestButtonWithParameter4) + ": " + string.Join(",", array));
         }
+#endif
     }
 }
