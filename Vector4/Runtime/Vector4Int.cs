@@ -118,6 +118,9 @@ namespace UnityEngine.Extension
                     case 2:
                         z = value;
                         break;
+                    case 3:
+                        w = value;
+                        break;
                     default:
                         throw new IndexOutOfRangeException(
                             string.Format("Invalid Vector4Int index addressed: {0}!", index));
