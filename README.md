@@ -1,5 +1,5 @@
 # CustomizationInspector
-Customized unity inspector and serializable dictionary
+Customize Unity3D inspector by attribute(such as Button, ReadOnly, HideIf etc.) and serializable dictionary.
 
 ## Features
 * Provide some attributes to change original inspector.(Rename,HideIf,ShowIf,ReadOnly,ValueDropdown,InfoBox,MinMax,Button...)
