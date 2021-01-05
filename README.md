@@ -6,7 +6,6 @@ Customize Unity3D inspector by attribute(such as Button, ReadOnly, HideIf etc.) 
 * Serialize dictionary class to easy edit in inspector.
 * Redraw `Vector4` and `Vector4Int` inspector.
 * Add Copy and Paste button on `AnimationCurve` inspector.
-* An attempt to mimic the ReorderableList within Unity while adding some extended functionality.
 
 ## Effect
 * CommonAttributes
@@ -24,13 +23,6 @@ Customize Unity3D inspector by attribute(such as Button, ReadOnly, HideIf etc.) 
 * Vector4
 
 ![image](https://github.com/Mr-sB/CustomizationInspector/blob/master/Screenshots/Vector4Example.png)
-* ReorderableList
-
-![image](https://github.com/Mr-sB/CustomizationInspector/blob/master/Screenshots/ReorderableExample.png)
 
 ## Note
 `AnimationCurve` require [UnityExtensionUtil](https://github.com/Mr-sB/UnityExtensionUtil) module.
-
-## Thanks
-Thanks for cfoulston/Unity-Reorderable-List providing ReorderableList function.
-https://github.com/cfoulston/Unity-Reorderable-List
