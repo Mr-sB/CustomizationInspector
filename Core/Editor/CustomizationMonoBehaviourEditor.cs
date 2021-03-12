@@ -44,10 +44,11 @@ namespace CustomizationInspector.Editor
 			
 			//利用base序列化
 			base.OnInspectorGUI();
-			MethodAttribute(targetType, target);
+			//Apply to all targets.
+			MethodAttribute(targetType, targets);
 		}
 
-		public static void MethodAttribute(Type targetType, object target)
+		public static void MethodAttribute(Type targetType, object[] targets)
 		{
 			MethodInfo[] methodInfos = targetType.GetMethods(flag);
 			foreach (var info in methodInfos)
@@ -60,16 +61,19 @@ namespace CustomizationInspector.Editor
 						string desc = buttonAttribute.ShowName ?? info.Name;
 						if (GUILayout.Button(desc))
 						{
-							try
+							foreach (var target in targets)
 							{
-								info.Invoke(target, buttonAttribute.Params);
-							}
-							catch (Exception e)
-							{
-								if (target is UnityEngine.Object context)
-									Debug.LogError(e, context);
-								else
-									Debug.LogError(e);
+								try
+								{
+									info.Invoke(target, buttonAttribute.Params);
+								}
+								catch (Exception e)
+								{
+									if (target is UnityEngine.Object context)
+										Debug.LogError(e, context);
+									else
+										Debug.LogError(e);
+								}
 							}
 						}
 					}
