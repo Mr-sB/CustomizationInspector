@@ -191,7 +191,7 @@ namespace CustomizationInspector.Editor
 			}
 
             //目标值
-			string targetFieldValue = fieldInfo.GetValue(target).ToString();
+			string targetFieldValue = (fieldInfo.GetValue(target) ?? string.Empty).ToString();
 
 			GUIContent[] displayedOptions = new GUIContent[targetValue.Count];
 			for (int i = 0; i < displayedOptions.Length; i++)
