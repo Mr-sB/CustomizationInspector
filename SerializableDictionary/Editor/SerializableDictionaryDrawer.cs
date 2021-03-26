@@ -20,14 +20,14 @@ namespace CustomizationInspector.Editor
         {
             if (mToAddContent == null)
                 mToAddContent = new GUIContent("To Add");
-            SerializedProperty isAddProperty = property.FindPropertyRelative("mIsAdd");
-            SerializedProperty keysProperty = property.FindPropertyRelative("mKeys");
-            SerializedProperty valuesProperty = property.FindPropertyRelative("mValues");
             float propertyHeight = EditorGUIUtility.singleLineHeight;
             float lineWidth = position.width;
             var labelRect = new Rect(position.x, position.y, lineWidth, EditorGUIUtility.singleLineHeight);
             if (EditorGUI.PropertyField(labelRect, property, false))
             {
+                SerializedProperty isAddProperty = property.FindPropertyRelative("mIsAdd");
+                SerializedProperty keysProperty = property.FindPropertyRelative("mKeys");
+                SerializedProperty valuesProperty = property.FindPropertyRelative("mValues");
                 propertyHeight += 2;
                 EditorGUI.indentLevel++;
                 float elementNameWidth = 80;
@@ -198,57 +198,54 @@ namespace CustomizationInspector.Editor
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
-            float propertyHeight;
+            float propertyHeight = EditorGUIUtility.singleLineHeight;//property
+            if (!property.isExpanded) return propertyHeight;
             SerializedProperty isAddProperty = property.FindPropertyRelative("mIsAdd");
             SerializedProperty keysProperty = property.FindPropertyRelative("mKeys");
             SerializedProperty valuesProperty = property.FindPropertyRelative("mValues");
-            propertyHeight = EditorGUIUtility.singleLineHeight;//property
-            if (property.isExpanded)
+            propertyHeight += 2;
+            EditorGUI.indentLevel++;
+            propertyHeight += EditorGUIUtility.singleLineHeight;//Key Value Label
+            if (isAddProperty.boolValue)
             {
                 propertyHeight += 2;
-                EditorGUI.indentLevel++;
-                propertyHeight += EditorGUIUtility.singleLineHeight;//Key Value Label
-                if (isAddProperty.boolValue)
-                {
-                    propertyHeight += 2;
-                    SerializedProperty toAddKeyProperty = property.FindPropertyRelative("mToAddKey");
-                    SerializedProperty toAddValueProperty = property.FindPropertyRelative("mToAddValue");
-                    //计算属性高度
-                    float height = EditorGUIUtility.singleLineHeight;
+                SerializedProperty toAddKeyProperty = property.FindPropertyRelative("mToAddKey");
+                SerializedProperty toAddValueProperty = property.FindPropertyRelative("mToAddValue");
+                //计算属性高度
+                float height = EditorGUIUtility.singleLineHeight;
 
-                    var keyPropertyHeight = EditorGUI.GetPropertyHeight(toAddKeyProperty, true);
-                    if (keyPropertyHeight > height)
-                        height = keyPropertyHeight;
+                var keyPropertyHeight = EditorGUI.GetPropertyHeight(toAddKeyProperty, true);
+                if (keyPropertyHeight > height)
+                    height = keyPropertyHeight;
 
-                    var valuePropertyHeight = EditorGUI.GetPropertyHeight(toAddValueProperty, true);
-                    if (valuePropertyHeight > height)
-                        height = valuePropertyHeight;
+                var valuePropertyHeight = EditorGUI.GetPropertyHeight(toAddValueProperty, true);
+                if (valuePropertyHeight > height)
+                    height = valuePropertyHeight;
 
-                    propertyHeight += height + 2;//Item
-                    propertyHeight += EditorGUIUtility.singleLineHeight;//Add Button
-                }
-
-                //序列化Key Value
-                for (int i = 0, size = keysProperty.arraySize; i < size; i++)
-                {
-                    propertyHeight += 2;
-                    //计算属性高度
-                    float height = EditorGUIUtility.singleLineHeight;
-
-                    var keyProperty = keysProperty.GetArrayElementAtIndex(i);
-                    var keyPropertyHeight = EditorGUI.GetPropertyHeight(keyProperty, true);
-                    if (keyPropertyHeight > height)
-                        height = keyPropertyHeight;
-
-                    var valueProperty = valuesProperty.GetArrayElementAtIndex(i);
-                    var valuePropertyHeight = EditorGUI.GetPropertyHeight(valueProperty, true);
-                    if (valuePropertyHeight > height)
-                        height = valuePropertyHeight;
-                    
-                    propertyHeight += height;//Item
-                }
-                EditorGUI.indentLevel--;
+                propertyHeight += height + 2;//Item
+                propertyHeight += EditorGUIUtility.singleLineHeight;//Add Button
             }
+
+            //序列化Key Value
+            for (int i = 0, size = keysProperty.arraySize; i < size; i++)
+            {
+                propertyHeight += 2;
+                //计算属性高度
+                float height = EditorGUIUtility.singleLineHeight;
+
+                var keyProperty = keysProperty.GetArrayElementAtIndex(i);
+                var keyPropertyHeight = EditorGUI.GetPropertyHeight(keyProperty, true);
+                if (keyPropertyHeight > height)
+                    height = keyPropertyHeight;
+
+                var valueProperty = valuesProperty.GetArrayElementAtIndex(i);
+                var valuePropertyHeight = EditorGUI.GetPropertyHeight(valueProperty, true);
+                if (valuePropertyHeight > height)
+                    height = valuePropertyHeight;
+                    
+                propertyHeight += height;//Item
+            }
+            EditorGUI.indentLevel--;
             return propertyHeight;
         }
     }
