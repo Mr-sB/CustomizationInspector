@@ -23,7 +23,7 @@ namespace CustomizationInspector.Editor
             float propertyHeight = EditorGUIUtility.singleLineHeight;
             float lineWidth = position.width;
             var labelRect = new Rect(position.x, position.y, lineWidth, EditorGUIUtility.singleLineHeight);
-            if (EditorGUI.PropertyField(labelRect, property, false))
+            if (EditorGUI.PropertyField(labelRect, property, label, false))
             {
                 SerializedProperty isAddProperty = property.FindPropertyRelative("mIsAdd");
                 SerializedProperty keysProperty = property.FindPropertyRelative("mKeys");
@@ -213,31 +213,31 @@ namespace CustomizationInspector.Editor
                 SerializedProperty toAddValueProperty = property.FindPropertyRelative("mToAddValue");
                 //计算属性高度
                 float height = EditorGUIUtility.singleLineHeight;
-
+        
                 var keyPropertyHeight = EditorGUI.GetPropertyHeight(toAddKeyProperty, true);
                 if (keyPropertyHeight > height)
                     height = keyPropertyHeight;
-
+        
                 var valuePropertyHeight = EditorGUI.GetPropertyHeight(toAddValueProperty, true);
                 if (valuePropertyHeight > height)
                     height = valuePropertyHeight;
-
+        
                 propertyHeight += height + 2;//Item
                 propertyHeight += EditorGUIUtility.singleLineHeight;//Add Button
             }
-
+        
             //序列化Key Value
             for (int i = 0, size = keysProperty.arraySize; i < size; i++)
             {
                 propertyHeight += 2;
                 //计算属性高度
                 float height = EditorGUIUtility.singleLineHeight;
-
+        
                 var keyProperty = keysProperty.GetArrayElementAtIndex(i);
                 var keyPropertyHeight = EditorGUI.GetPropertyHeight(keyProperty, true);
                 if (keyPropertyHeight > height)
                     height = keyPropertyHeight;
-
+        
                 var valueProperty = valuesProperty.GetArrayElementAtIndex(i);
                 var valuePropertyHeight = EditorGUI.GetPropertyHeight(valueProperty, true);
                 if (valuePropertyHeight > height)
