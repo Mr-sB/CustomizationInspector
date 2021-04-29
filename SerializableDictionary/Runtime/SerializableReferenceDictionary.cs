@@ -1,24 +1,21 @@
+﻿#if UNITY_2019_3_OR_NEWER
 using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace CustomizationInspector.Runtime
 {
-    public abstract class SerializableDictionaryBase{}
+    public abstract class SerializableReferenceDictionaryBase{}
 
     [Serializable]
-    public class SerializableDictionary<TK, TV> : SerializableDictionaryBase, ISerializationCallbackReceiver
+    public class SerializableReferenceDictionary<TK, TV> : SerializableReferenceDictionaryBase, ISerializationCallbackReceiver
     {
-        [SerializeField] private bool mIsAdd;
-        [SerializeField] private TK mToAddKey;
-        [SerializeField] private TV mToAddValue;
-        
         [SerializeField] protected List<TK> mKeys = new List<TK>();
-        [SerializeField] protected List<TV> mValues = new List<TV>();
+        [SerializeField, SerializeReference] protected List<TV> mValues = new List<TV>();
         protected Dictionary<TK, TV> mDictionary = new Dictionary<TK, TV>();
         public Dictionary<TK, TV> Dictionary => mDictionary;
         //隐式转换
-        public static implicit operator Dictionary<TK, TV>(SerializableDictionary<TK, TV> serializableDictionary)
+        public static implicit operator Dictionary<TK, TV>(SerializableReferenceDictionary<TK, TV> serializableDictionary)
         {
             return serializableDictionary.mDictionary;
         }
@@ -49,3 +46,4 @@ namespace CustomizationInspector.Runtime
         }
     }
 }
+#endif

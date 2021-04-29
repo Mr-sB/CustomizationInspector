@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.3731193, g: 0.38073996, b: 0.3587269, a: 1}
+  m_IndirectSpecularColor: {r: 0.3731193, g: 0.38073996, b: 0.35872698, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -200,20 +200,40 @@ MonoBehaviour:
     mValues:
     - {fileID: 722291511}
     - {fileID: 0}
-  transformCustomClassDict:
-    mIsAdd: 1
+  TransformCustomClassDict:
+    mIsAdd: 0
     mToAddKey: {fileID: 0}
     mToAddValue:
       A: 0
       B: 
     mKeys:
-    - {fileID: 722291513}
     - {fileID: 539709032}
+    - {fileID: 722291513}
     mValues:
+    - A: 0
+      B: GameObject
     - A: 1
-      B: tt
-    - A: 89
-      B: TestGo
+      B: Example
+  IntCustomClassReferenceDict:
+    mKeys: 0100000002000000
+    mValues:
+    - id: 0
+    - id: 1
+  references:
+    version: 1
+    00000000:
+      type: {class: SerializableDictionaryExample/CustomClass, ns: CustomizationInspector.Example,
+        asm: Assembly-CSharp}
+      data:
+        A: 1
+        B: Test1
+    00000001:
+      type: {class: SerializableDictionaryExample/CustomClassChild, ns: CustomizationInspector.Example,
+        asm: Assembly-CSharp}
+      data:
+        A: 2
+        B: Test2
+        C: 1.5
 --- !u!4 &722291513
 Transform:
   m_ObjectHideFlags: 0
