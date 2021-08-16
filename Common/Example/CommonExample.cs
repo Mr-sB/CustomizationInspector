@@ -33,7 +33,9 @@ namespace CustomizationInspector.Example
         }
         
         [Button(null, 2, "str")]
-        private void TestButtonWithParameter1(int a, string b)
+        [Button("TestButtonWithParameter1Error")]
+        [Button("TestButtonWithParameter1UseDefault", 1)]
+        private void TestButtonWithParameter1(int a, string b = "default")
         {
             Debug.LogError(nameof(TestButtonWithParameter1) + ": " + a + ", " + b);
         }

@@ -58,14 +58,40 @@ namespace CustomizationInspector.Editor
 				{
 					if (attribute is ButtonAttribute buttonAttribute)
 					{
+						var parameters = info.GetParameters();
+						bool canDraw = buttonAttribute.Params.Count <= parameters.Length;
+						if (canDraw)
+						{
+							for (int i = buttonAttribute.Params.Count, len = parameters.Length; i < len; i++)
+							{
+								var parameter = parameters[i];
+								if (!parameter.HasDefaultValue)
+								{
+									canDraw = false;
+									break;
+								}
+								//Add default value
+								buttonAttribute.Params.Add(parameter.DefaultValue);
+							}
+						}
 						string desc = buttonAttribute.ShowName ?? info.Name;
+						if (!canDraw)
+						{
+							var contentColor = GUI.contentColor;
+							//Red color
+							GUI.contentColor = new Color(1, 0.3254902f, 0.2901961f);
+							if (GUILayout.Button(desc))
+								Debug.LogErrorFormat("Parameter count not match! Method name: {0}, button name: {1}", info.Name, desc);
+							GUI.contentColor = contentColor;
+							continue;
+						}
 						if (GUILayout.Button(desc))
 						{
 							foreach (var target in targets)
 							{
 								try
 								{
-									info.Invoke(target, buttonAttribute.Params);
+									info.Invoke(target, buttonAttribute.Params.ToArray());
 								}
 								catch (Exception e)
 								{

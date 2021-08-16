@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 namespace CustomizationInspector.Runtime
 {	
@@ -15,12 +16,12 @@ namespace CustomizationInspector.Runtime
 	{
 
 		public readonly string ShowName;
-		public readonly object[] Params;
+		public readonly List<object> Params;
 
 		public ButtonAttribute(string showName = null, params object[] parameters)
 		{
 			ShowName = showName;
-			Params = parameters;
+			Params = parameters != null ? new List<object>(parameters) : new List<object>();
 		}
 	}
 
