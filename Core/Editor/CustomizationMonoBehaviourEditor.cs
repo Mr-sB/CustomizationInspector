@@ -77,12 +77,12 @@ namespace CustomizationInspector.Editor
 						string desc = buttonAttribute.ShowName ?? info.Name;
 						if (!canDraw)
 						{
-							var contentColor = GUI.contentColor;
+							var backgroundColor = GUI.backgroundColor;
 							//Red color
-							GUI.contentColor = new Color(1, 0.3254902f, 0.2901961f);
+							GUI.backgroundColor = new Color(1, 0.3254902f, 0.2901961f);
 							if (GUILayout.Button(desc))
-								Debug.LogErrorFormat("Parameter count not match! Method name: {0}, button name: {1}", info.Name, desc);
-							GUI.contentColor = contentColor;
+								Debug.LogErrorFormat("Parameter count not match! Method name: {0}, button name: {1}.", info.Name, desc);
+							GUI.backgroundColor = backgroundColor;
 							continue;
 						}
 						if (GUILayout.Button(desc))
