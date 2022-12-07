@@ -25,7 +25,7 @@ namespace CustomizationInspector.Runtime
 		}
 	}
 
-	[AttributeUsage(AttributeTargets.Field, Inherited = true, AllowMultiple = true)]
+	[AttributeUsage(AttributeTargets.Field, Inherited = true, AllowMultiple = false)]
 	public class HideIfAttribute : PropertyAttribute
 	{
 
@@ -38,7 +38,7 @@ namespace CustomizationInspector.Runtime
 		}
 	}
 
-	[AttributeUsage(AttributeTargets.Field, Inherited = true, AllowMultiple = true)]
+	[AttributeUsage(AttributeTargets.Field, Inherited = true, AllowMultiple = false)]
 	public class ShowIfAttribute : PropertyAttribute
 	{
 		public readonly string MemberName;
@@ -50,11 +50,11 @@ namespace CustomizationInspector.Runtime
 		}
 	}
 
-	[AttributeUsage(AttributeTargets.Field, Inherited = true, AllowMultiple = true)]
+	[AttributeUsage(AttributeTargets.Field, Inherited = true, AllowMultiple = false)]
 	public class ReadOnlyAttribute : PropertyAttribute
 	{ }
 
-	[AttributeUsage(AttributeTargets.Field, Inherited = true, AllowMultiple = true)]
+	[AttributeUsage(AttributeTargets.Field, Inherited = true, AllowMultiple = false)]
 	public class ValueDropdownAttribute : PropertyAttribute
 	{
 
@@ -81,7 +81,7 @@ namespace CustomizationInspector.Runtime
 		}
 	}
 	
-	[AttributeUsage(AttributeTargets.Field, Inherited = true, AllowMultiple = true)]
+	[AttributeUsage(AttributeTargets.Field, Inherited = true, AllowMultiple = false)]
 	public class RenameAttribute : PropertyAttribute
 	{
 		public readonly string Rename;

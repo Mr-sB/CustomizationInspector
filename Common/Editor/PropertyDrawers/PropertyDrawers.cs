@@ -7,30 +7,34 @@ using UnityEngine;
 
 namespace CustomizationInspector.Editor
 {
-	//EditorGUILayout.PropertyField能正确计算出位置和高度
-	//需要精细控制的再用EditorGUI.PropertyField
-	
 	[CustomPropertyDrawer(typeof(HideIfAttribute))]
 	internal class HideIfDrawer : PropertyDrawer
 	{
 		protected BindingFlags mBindingFlags = BindingFlags.Instance | BindingFlags.NonPublic |
 		                                       BindingFlags.Public | BindingFlags.Static;
 		protected static MemberTypes mMemberTypes = MemberTypes.Field | MemberTypes.Property | MemberTypes.Method;
-		UnityEngine.Object target;
-		Type targetType;
-		bool isShow;
+
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 		{
-			isShow = true;
+			if (IsShow(property))
+				EditorGUI.PropertyField(position, property, label, true);
+		}
+
+		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+		{
+			if (IsShow(property))
+				return EditorGUI.GetPropertyHeight(property);
+			return 0;
+		}
+
+		private bool IsShow(SerializedProperty property)
+		{
+			bool isShow = true;
 			//获取对应的脚本
-			if (target == null)
-			{
-				target = property.serializedObject.targetObject;
-			}
+			var target = property.serializedObject.targetObject;
 
 			//获取对应脚本的类型
-			if (targetType == null)
-				targetType = target.GetType();
+			var	targetType = target.GetType();
 			//获取判断的名称
 			var hideIfAttribute = attribute as HideIfAttribute;
 			MemberInfo[] memberInfos = targetType.GetMember(hideIfAttribute.MemberName, mMemberTypes, mBindingFlags);
@@ -56,15 +60,7 @@ namespace CustomizationInspector.Editor
 					Debug.LogError(e);
 				}
 			}
-			if (isShow)
-			{
-				EditorGUILayout.PropertyField(property, label, true);
-			}
-		}
-
-		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
-		{
-			return 0;
+			return isShow;
 		}
 	}
 
@@ -74,18 +70,27 @@ namespace CustomizationInspector.Editor
 		protected BindingFlags mBindingFlags = BindingFlags.Instance | BindingFlags.NonPublic |
 				BindingFlags.Public | BindingFlags.Static;
 		protected static MemberTypes mMemberTypes = MemberTypes.Field | MemberTypes.Property | MemberTypes.Method;
-		UnityEngine.Object target;
-		Type targetType;
-		bool isShow;
+		
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 		{
-			isShow = true;
+			if (IsShow(property))
+				EditorGUI.PropertyField(position, property, label, true);
+		}
+
+		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+		{
+			if (IsShow(property))
+				return EditorGUI.GetPropertyHeight(property);
+			return 0;
+		}
+
+		private bool IsShow(SerializedProperty property)
+		{
+			bool isShow = true;
 			//获取对应的脚本
-			if (target == null)
-				target = property.serializedObject.targetObject;
+			var target = property.serializedObject.targetObject;
 			//获取对应脚本的类型
-			if (targetType == null)
-				targetType = target.GetType();
+			var targetType = target.GetType();
 			//获取判断的名称
 			var showIfAttribute = attribute as ShowIfAttribute;
 			MemberInfo[] memberInfos = targetType.GetMember(showIfAttribute.MemberName, mMemberTypes, mBindingFlags);
@@ -111,15 +116,8 @@ namespace CustomizationInspector.Editor
 					Debug.LogError(e);
 				}
 			}
-			if (isShow)
-			{
-				EditorGUILayout.PropertyField(property, label, true);
-			}
-		}
 
-		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
-		{
-			return 0;
+			return isShow;
 		}
 	}
 
@@ -130,13 +128,13 @@ namespace CustomizationInspector.Editor
 		{
 			bool enabled = GUI.enabled;
 			GUI.enabled = false;
-			EditorGUILayout.PropertyField(property, label);
+			EditorGUI.PropertyField(position, property, label);
 			GUI.enabled = enabled;
 		}
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
-            return 0;
+	        return EditorGUI.GetPropertyHeight(property);
         }
     }
 
@@ -146,17 +144,64 @@ namespace CustomizationInspector.Editor
 		protected BindingFlags mBindingFlags = BindingFlags.Instance | BindingFlags.NonPublic |
 				BindingFlags.Public | BindingFlags.Static;
 		protected static MemberTypes mMemberTypes = MemberTypes.Field | MemberTypes.Property | MemberTypes.Method;
-		UnityEngine.Object target;
-		Type targetType;
-		int selectedIndex = -1;
+		
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 		{
 			//获取对应的脚本
-			if (target == null)
-				target = property.serializedObject.targetObject;
+			var target = property.serializedObject.targetObject;
+			//获取源数据数组数据
+			IList targetValue = GetTargetList(property);
+			if (targetValue == null)
+			{
+				Debug.LogError(string.Format("{0}使用出错!", attribute.GetType().ToString()), target);
+				EditorGUI.PropertyField(position, property, label, true);
+				return;
+			}
+
+            //目标值
+			string targetFieldValue = (fieldInfo.GetValue(target) ?? string.Empty).ToString();
+
+			int selectedIndex = -1;
+			GUIContent[] displayedOptions = new GUIContent[targetValue.Count];
+			for (int i = 0; i < displayedOptions.Length; i++)
+			{
+				displayedOptions[i] = new GUIContent(targetValue[i].ToString());
+				if (displayedOptions[i].text == targetFieldValue)
+					selectedIndex = i;
+			}
+            bool needInit = selectedIndex == -1;
+            if (needInit)
+                selectedIndex = 0;
+			EditorGUI.BeginChangeCheck();
+			selectedIndex = EditorGUI.Popup(position, label, selectedIndex, displayedOptions);
+			if (needInit || EditorGUI.EndChangeCheck())
+			{
+				try
+				{
+					Undo.RecordObject(target, target.name);
+					fieldInfo.SetValue(target, targetValue[selectedIndex]);
+				}
+				catch (Exception e)
+				{
+					Debug.LogError(string.Format("{0}使用出错!", attribute.GetType().ToString()), target);
+					Debug.LogError(e.Message, target);
+				}
+			}
+		}
+
+		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+		{
+			if (GetTargetList(property) == null)
+				return EditorGUI.GetPropertyHeight(property);
+			return EditorGUIUtility.singleLineHeight;
+		}
+
+		private IList GetTargetList(SerializedProperty property)
+		{
+			//获取对应的脚本
+			var target = property.serializedObject.targetObject;
 			//获取对应脚本的类型
-			if (targetType == null)
-				targetType = target.GetType();
+			var targetType = target.GetType();
 			//获取源数据数组数据
 			IList targetValue = null;
 			ValueDropdownAttribute valueDropdownAttribute = attribute as ValueDropdownAttribute;
@@ -183,124 +228,31 @@ namespace CustomizationInspector.Editor
 					Debug.LogError(e);
 				}
 			}
-			if (targetValue == null)
-			{
-				Debug.LogError(string.Format("{0}使用出错!", attribute.GetType().ToString()), target);
-				EditorGUILayout.PropertyField(property, label, true);
-				return;
-			}
-
-            //目标值
-			string targetFieldValue = (fieldInfo.GetValue(target) ?? string.Empty).ToString();
-
-			GUIContent[] displayedOptions = new GUIContent[targetValue.Count];
-			for (int i = 0; i < displayedOptions.Length; i++)
-			{
-				displayedOptions[i] = new GUIContent(targetValue[i].ToString());
-				if (displayedOptions[i].text == targetFieldValue)
-					selectedIndex = i;
-			}
-            bool needInit = selectedIndex == -1;
-            if (needInit)
-                selectedIndex = 0;
-			EditorGUI.BeginChangeCheck();
-			selectedIndex = EditorGUILayout.Popup(label, selectedIndex, displayedOptions);
-			if (needInit || EditorGUI.EndChangeCheck())
-			{
-				try
-				{
-					Undo.RecordObject(target, target.name);
-					fieldInfo.SetValue(target, targetValue[selectedIndex]);
-				}
-				catch (Exception e)
-				{
-					Debug.LogError(string.Format("{0}使用出错!", attribute.GetType().ToString()), target);
-					Debug.LogError(e.Message, target);
-				}
-			}
-		}
-
-		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
-		{
-			return 0;
+			return targetValue;
 		}
 	}
 	
 	[CustomPropertyDrawer(typeof(RenameAttribute))]
 	internal class RenameDrawer : PropertyDrawer
 	{
-		private GUIContent renameLable;
+		private GUIContent renameLabel;
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 		{
 			string rename = (attribute as RenameAttribute).Rename;
 			if (string.IsNullOrWhiteSpace(rename))
 			{
-				EditorGUILayout.PropertyField(property, label);
+				EditorGUI.PropertyField(position, property, label);
 				return;
 			}
 
-			if (renameLable == null)
-				renameLable = new GUIContent(label) {text = rename};
-			EditorGUILayout.PropertyField(property, renameLable);
+			if (renameLabel == null)
+				renameLabel = new GUIContent(label) {text = rename};
+			EditorGUI.PropertyField(position, property, renameLabel);
 		}
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
-            return 0;
+	        return EditorGUI.GetPropertyHeight(property);
         }
     }
-	
-	[CustomPropertyDrawer(typeof(MinMaxAttribute))]
-	internal class MinMaxDrawer : PropertyDrawer
-	{
-		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
-		{
-			if (!property.type.Equals(nameof(Vector2)))
-			{
-				EditorGUILayout.PropertyField(property, label, true);
-				return;
-			}
-			var minMaxLimit = attribute as MinMaxAttribute;
-            SerializedProperty minProperty = property.FindPropertyRelative("x");
-            SerializedProperty maxProperty = property.FindPropertyRelative("y");
-            float limitRectWidth = 40;
-            float space = 2;
-            
-            var labelRect = position;
-            labelRect.height = EditorGUIUtility.singleLineHeight;
-            EditorGUI.LabelField(labelRect, label);
-            //缩进
-            EditorGUI.indentLevel++;
-            labelRect = EditorGUI.IndentedRect(labelRect);
-            EditorGUI.indentLevel--;
-            float y = position.y + labelRect.height;
-            var minLimitRect = new Rect(labelRect.x, y, limitRectWidth, EditorGUIUtility.singleLineHeight);
-            var maxLimitRect = new Rect(position.xMax - limitRectWidth, y, limitRectWidth, EditorGUIUtility.singleLineHeight);
-            var sliderRect = new Rect(minLimitRect.xMax + space, y, maxLimitRect.xMin - minLimitRect.xMax - space, EditorGUIUtility.singleLineHeight);
-            float minLimit = minMaxLimit.MinLimit;
-            float maxLimit = minMaxLimit.MaxLimit;
-            EditorGUI.BeginChangeCheck();
-            EditorGUI.PropertyField(minLimitRect, minProperty, GUIContent.none);
-            EditorGUI.PropertyField(maxLimitRect, maxProperty, GUIContent.none);
-            float min = minProperty.floatValue;
-            float max = maxProperty.floatValue;
-            EditorGUI.MinMaxSlider(sliderRect, ref min, ref max, minLimit, maxLimit);
-            if (EditorGUI.EndChangeCheck())
-            {
-                //保证数据有效性
-                min = Mathf.Clamp(min, minLimit, maxLimit);
-                max = Mathf.Clamp(max, minLimit, maxLimit);
-                min = Mathf.Clamp(min, minLimit, max);
-                max = Mathf.Clamp(max, min, maxLimit);
-                minProperty.floatValue = min;
-                maxProperty.floatValue = max;
-            }
-        }
-
-        public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
-        {
-	        if (!property.type.Equals(nameof(Vector2))) return 0;
-            return EditorGUIUtility.singleLineHeight * 2;
-        }
-	}
 }

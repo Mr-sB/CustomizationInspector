@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace CustomizationInspector.Runtime
 {
-    [AttributeUsage(AttributeTargets.Field, Inherited = true, AllowMultiple = true)]
+    [AttributeUsage(AttributeTargets.Field, Inherited = true, AllowMultiple = false)]
     public class MinMaxAttribute : PropertyAttribute
     {
         public readonly float MinLimit;
