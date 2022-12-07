@@ -19,7 +19,12 @@ namespace CustomizationInspector.Editor
 			for (int i = 0; i < array.Length; i++)
 			{
 				if (!array[i].StartsWith("*Array"))
-					obj = obj.GetType().GetFieldInfoIncludeBase(array[i]).GetValue(obj);
+				{
+					var fieldInfo = obj.GetType().GetFieldInfoIncludeBase(array[i]);
+					if (fieldInfo == null)
+						return null;
+					obj = fieldInfo.GetValue(obj);
+				}
 				else
 				{
 					int index = int.Parse(array[i].Substring(7, array[i].Length - 8));
@@ -27,6 +32,31 @@ namespace CustomizationInspector.Editor
 				}
 			}
 			return obj;
+		}
+		
+		//根据SerializedProperty查找到其对应的FieldInfo
+		public static FieldInfo GetFieldInfo(this SerializedProperty property)
+		{
+			//从最外层的property.serializedObject.targetObject(继承自UnityEngine.Object)的对象一层一层的找到目前需要绘制的对象
+			string[] array = property.propertyPath.Replace("Array.data", "*Array").Split('.');
+			object obj = property.serializedObject.targetObject;
+			FieldInfo fieldInfo = null;
+			for (int i = 0; i < array.Length; i++)
+			{
+				if (!array[i].StartsWith("*Array"))
+				{
+					fieldInfo = obj.GetType().GetFieldInfoIncludeBase(array[i]);
+					if (fieldInfo == null)
+						return null;
+					obj = fieldInfo.GetValue(obj);
+				}
+				else
+				{
+					int index = int.Parse(array[i].Substring(7, array[i].Length - 8));
+					obj = (obj as IList)[index];
+				}
+			}
+			return fieldInfo;
 		}
 		
 		//根据SerializedProperty查找到List data对应的对象引用

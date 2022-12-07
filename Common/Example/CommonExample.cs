@@ -5,23 +5,32 @@ namespace CustomizationInspector.Example
 {
     public class CommonExample : MonoBehaviour
     {
-        [Rename("是否隐藏")] public bool Hide;
+        [Foldout("Foldout A")]
+        [Rename("是否隐藏")]
+        public bool Hide;
 
+        [Foldout("Foldout A")]
         [HideIf(nameof(Hide))] //支持值为bool的field、property、method
         public Vector3 HideField;
 
-        [Rename("是否显示")] public bool Show;
+        [Foldout("Foldout A")]
+        [Rename("是否显示")]
+        public bool Show;
 
+        [Foldout("Foldout B")]
         [ShowIf(nameof(Show))] //支持值为bool的field、property、method
         public Vector3 ShowField;
 
-        [ReadOnly] public Vector3 ReadOnlyField;
+        [ReadOnly]
+        public Vector3 ReadOnlyField;
 
+        [Foldout("Foldout B")]
         [ValueDropdown(nameof(DropdownArray))] //支持值为IList的field、property、method
         public string ValueDropdownField;
 
         private string[] DropdownArray = {"Value1", "Value2", "Value3"};
 
+        [Foldout("Foldout A")]
         [InfoBox("InfoBox!", MessageType.Info)]
         public Vector3 InfoBoxField;
 

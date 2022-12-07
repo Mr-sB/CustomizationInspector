@@ -90,4 +90,14 @@ namespace CustomizationInspector.Runtime
 			Rename = rename;
 		}
 	}
+	
+	[AttributeUsage(AttributeTargets.Field, Inherited = true, AllowMultiple = false)]
+	public class FoldoutAttribute : Attribute
+	{
+		public readonly string GroupName;
+		public FoldoutAttribute(string groupName)
+		{
+			GroupName = groupName;
+		}
+	}
 }
