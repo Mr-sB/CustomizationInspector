@@ -14,12 +14,13 @@ namespace CustomizationInspector.Editor
 			if (infoBox == null)
 				infoBox = attribute as InfoBoxAttribute;
 			position = EditorGUI.IndentedRect(position);
+			position.height -= 2;
 			EditorGUI.HelpBox(position, infoBox.Description, (UnityEditor.MessageType) infoBox.MessageType);
 		}
 
 		public override float GetHeight()
 		{
-			return (attribute as InfoBoxAttribute).Height;
+			return (attribute as InfoBoxAttribute).Height + 2;
 		}
 	}
 }
