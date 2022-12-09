@@ -16,17 +16,19 @@ namespace CustomizationInspector.Editor
 		{
 			public readonly string GroupName;
 			public readonly List<string> PropertiesPath;
+			public readonly List<MethodInfo> MethodInfos;
 			public bool Expanded;
 
 			public FoldoutInfo(string groupName, bool expanded)
 			{
 				GroupName = groupName;
 				PropertiesPath = new List<string>();
+				MethodInfos = new List<MethodInfo>();
 				Expanded = expanded;
 			}
 		}
 		
-		public static BindingFlags flag = BindingFlags.Instance | BindingFlags.NonPublic |
+		public static readonly BindingFlags flag = BindingFlags.Instance | BindingFlags.NonPublic |
 				BindingFlags.Public | BindingFlags.Static;
 
 		private const string SavedExpandedSaveKey = "CustomizationInspector_Foldout_Expanded_Save_Key";
@@ -34,7 +36,16 @@ namespace CustomizationInspector.Editor
 		private Type targetType;
 		private Dictionary<string, FoldoutInfo> foldoutCache;
 		private Dictionary<string, string> allFoldoutProperties;
+		private List<string> allGroupNames; //sorted by group order
+		private HashSet<string> drewFoldoutMembers;
+		private HashSet<string> drewFoldoutGroups;
 		private static HashSet<string> savedKeys = new HashSet<string>();
+
+		private static Dictionary<Type, Action<MethodInfo, Attribute, Object[]>> DrawMethodHandlers =
+			new Dictionary<Type, Action<MethodInfo, Attribute, Object[]>>
+			{
+				{typeof(ButtonAttribute), DrawButton},
+			};
 
 		[InitializeOnLoadMethod]
 		private static void Initialize()
@@ -78,7 +89,9 @@ namespace CustomizationInspector.Editor
 		{
 			if (targetType == null)
 				targetType = target.GetType();
-			foldoutCache = SetupFoldout(serializedObject.GetIterator(), out allFoldoutProperties);
+			foldoutCache = SetupFoldout(serializedObject.GetIterator(), out allGroupNames, out allFoldoutProperties);
+			drewFoldoutMembers = new HashSet<string>();
+			drewFoldoutGroups = new HashSet<string>();
 		}
 		
 		void OnDisable()
@@ -108,47 +121,52 @@ namespace CustomizationInspector.Editor
 			serializedObject.UpdateIfRequiredOrScript();
 			SerializedProperty iterator = serializedObject.GetIterator();
 			
-			HashSet<string> drewFoldoutProperties = new HashSet<string>();
-			
+			drewFoldoutMembers.Clear();
+			drewFoldoutGroups.Clear();
 			for (bool enterChildren = true; iterator.NextVisible(enterChildren); enterChildren = false)
 			{
 				using (new EditorGUI.DisabledScope("m_Script" == iterator.propertyPath))
 				{
-					if (drewFoldoutProperties.Contains(iterator.propertyPath)) continue;
+					if (drewFoldoutMembers.Contains(iterator.propertyPath)) continue;
 					if (allFoldoutProperties.TryGetValue(iterator.propertyPath, out var groupName) &&
 					    foldoutCache.TryGetValue(groupName, out var foldoutInfo))
 					{
-						foldoutInfo.Expanded = EditorGUILayout.Foldout(foldoutInfo.Expanded, groupName, true);
-						EditorGUI.indentLevel++;
-						foreach (var path in foldoutInfo.PropertiesPath)
-						{
-							drewFoldoutProperties.Add(path);
-							if (foldoutInfo.Expanded)
-								EditorGUILayout.PropertyField(serializedObject.FindProperty(path), true);
-						}
-						EditorGUI.indentLevel--;
+						DrawFoldout(foldoutInfo);
 					}
 					else
 						EditorGUILayout.PropertyField(iterator, true);
 				}
 			}
+			
+			//Draw remain foldout
+			foreach (var groupName in allGroupNames)
+			{
+				if (drewFoldoutGroups.Contains(groupName) || !foldoutCache.TryGetValue(groupName, out var foldoutInfo)) continue;
+				DrawFoldout(foldoutInfo);
+			}
+			
 			serializedObject.ApplyModifiedProperties();
 			EditorGUI.EndChangeCheck();
 			
 			//利用base序列化
 			// base.OnInspectorGUI();
-			
+
 			//Apply to all targets.
-			MethodAttribute(targetType, targets);
+			DrawMethods();
+			
+			drewFoldoutMembers.Clear();
+			drewFoldoutGroups.Clear();
 		}
 
-		private static Dictionary<string, FoldoutInfo> SetupFoldout(SerializedProperty iterator, out Dictionary<string, string> allFoldoutProperties)
+		private static Dictionary<string, FoldoutInfo> SetupFoldout(SerializedProperty iterator, out List<string> allGroupNames, out Dictionary<string, string> allFoldoutProperties)
 		{
 			//Avoid changing origin iterator state.
 			iterator = iterator.Copy();
 			var target = iterator.serializedObject.targetObject;
+			var targetType = target.GetType();
 			Dictionary<string, FoldoutInfo> foldoutCache = new Dictionary<string, FoldoutInfo>();
 			allFoldoutProperties = new Dictionary<string, string>();
+			allGroupNames = new List<string>();
 			for (bool enterChildren = true; iterator.NextVisible(enterChildren); enterChildren = false)
 			{
 				try
@@ -161,72 +179,149 @@ namespace CustomizationInspector.Editor
 					{
 						foldoutInfo = new FoldoutInfo(foldoutAttribute.GroupName, EditorPrefs.GetBool(GetExpandedSaveKey(foldoutAttribute.GroupName, target), true));
 						foldoutCache.Add(foldoutAttribute.GroupName, foldoutInfo);
+						allGroupNames.Add(foldoutAttribute.GroupName);
 					}
 					foldoutInfo.PropertiesPath.Add(iterator.propertyPath);
 					allFoldoutProperties.Add(iterator.propertyPath, foldoutAttribute.GroupName);
 				}
 				catch (Exception e)
 				{
-					Debug.LogError(e, iterator.serializedObject.targetObject);
+					Debug.LogError(e, target);
 				}
 			}
+			
+			MethodInfo[] methodInfos = targetType.GetMethods(flag);
+			foreach (var methodInfo in methodInfos)
+			{
+				object[] attributes = methodInfo.GetCustomAttributes(true);
+				FoldoutAttribute foldoutAttribute = null;
+				foreach (object attribute in attributes)
+				{
+					if (attribute is FoldoutAttribute foldout)
+					{
+						foldoutAttribute = foldout;
+						break;
+					}
+				}
+				if (foldoutAttribute == null) continue;
+
+				var canDrawMethod = false;
+				foreach (object attribute in attributes)
+				{
+					//can draw
+					if (DrawMethodHandlers.ContainsKey(attribute.GetType()))
+					{
+						canDrawMethod = true;
+						break;
+					}
+				}
+
+				if (canDrawMethod)
+				{
+					if (!foldoutCache.TryGetValue(foldoutAttribute.GroupName, out var foldoutInfo))
+					{
+						foldoutInfo = new FoldoutInfo(foldoutAttribute.GroupName, EditorPrefs.GetBool(GetExpandedSaveKey(foldoutAttribute.GroupName, target), true));
+						foldoutCache.Add(foldoutAttribute.GroupName, foldoutInfo);
+						allGroupNames.Add(foldoutAttribute.GroupName);
+					}
+					foldoutInfo.MethodInfos.Add(methodInfo);
+				}
+			}
+			
 			return foldoutCache;
 		}
+
+		private void DrawFoldout(FoldoutInfo foldoutInfo)
+		{
+			drewFoldoutGroups.Add(foldoutInfo.GroupName);
+			foldoutInfo.Expanded = EditorGUILayout.Foldout(foldoutInfo.Expanded, foldoutInfo.GroupName, true);
+			EditorGUI.indentLevel++;
+			foreach (var path in foldoutInfo.PropertiesPath)
+			{
+				drewFoldoutMembers.Add(path);
+				if (foldoutInfo.Expanded)
+					EditorGUILayout.PropertyField(serializedObject.FindProperty(path), true);
+			}
+			foreach (var methodInfo in foldoutInfo.MethodInfos)
+			{
+				drewFoldoutMembers.Add(GetFoldoutMethodMemberKey(methodInfo));
+				if (foldoutInfo.Expanded)
+					DrawMethod(methodInfo, targets);
+			}
+			EditorGUI.indentLevel--;
+		}
 		
-		public static void MethodAttribute(Type targetType, object[] targets)
+		private void DrawMethods()
 		{
 			MethodInfo[] methodInfos = targetType.GetMethods(flag);
-			foreach (var info in methodInfos)
+			foreach (var methodInfo in methodInfos)
 			{
-				object[] attributes = info.GetCustomAttributes(true);
-				foreach (Attribute attribute in attributes)
+				if (drewFoldoutMembers!= null && drewFoldoutMembers.Contains(GetFoldoutMethodMemberKey(methodInfo))) continue;
+				DrawMethod(methodInfo, targets);
+			}
+		}
+
+		private static string GetFoldoutMethodMemberKey(MethodInfo methodInfo)
+		{
+			return $"--Method_{methodInfo}";
+		}
+		
+		private static void DrawMethod(MethodInfo methodInfo, Object[] targets)
+		{
+			object[] attributes = methodInfo.GetCustomAttributes(true);
+			foreach (Attribute attribute in attributes)
+			{
+				if (DrawMethodHandlers.TryGetValue(attribute.GetType(), out var handler))
+					handler?.Invoke(methodInfo, attribute, targets);
+			}
+		}
+
+		private static void DrawButton(MethodInfo methodInfo, Attribute attribute, Object[] targets)
+		{
+			if (attribute is not ButtonAttribute buttonAttribute) return;
+			var parameters = methodInfo.GetParameters();
+			bool canDraw = buttonAttribute.Params.Count <= parameters.Length;
+			if (canDraw)
+			{
+				for (int i = buttonAttribute.Params.Count, len = parameters.Length; i < len; i++)
 				{
-					if (attribute is ButtonAttribute buttonAttribute)
+					var parameter = parameters[i];
+					if (!parameter.HasDefaultValue)
 					{
-						var parameters = info.GetParameters();
-						bool canDraw = buttonAttribute.Params.Count <= parameters.Length;
-						if (canDraw)
-						{
-							for (int i = buttonAttribute.Params.Count, len = parameters.Length; i < len; i++)
-							{
-								var parameter = parameters[i];
-								if (!parameter.HasDefaultValue)
-								{
-									canDraw = false;
-									break;
-								}
-								//Add default value
-								buttonAttribute.Params.Add(parameter.DefaultValue);
-							}
-						}
-						string desc = buttonAttribute.ShowName ?? info.Name;
-						if (!canDraw)
-						{
-							var backgroundColor = GUI.backgroundColor;
-							//Red color
-							GUI.backgroundColor = new Color(1, 0.3254902f, 0.2901961f);
-							if (GUILayout.Button(desc))
-								Debug.LogErrorFormat("Parameter count not match! Method name: {0}, button name: {1}.", info.Name, desc);
-							GUI.backgroundColor = backgroundColor;
-							continue;
-						}
-						if (GUILayout.Button(desc))
-						{
-							foreach (var target in targets)
-							{
-								try
-								{
-									info.Invoke(target, buttonAttribute.Params.ToArray());
-								}
-								catch (Exception e)
-								{
-									if (target is UnityEngine.Object context)
-										Debug.LogError(e, context);
-									else
-										Debug.LogError(e);
-								}
-							}
-						}
+						canDraw = false;
+						break;
+					}
+					//Add default value
+					buttonAttribute.Params.Add(parameter.DefaultValue);
+				}
+			}
+			GUIContent content = new GUIContent(buttonAttribute.ShowName ?? methodInfo.Name);
+			Rect position = GUILayoutUtility.GetRect(content, GUI.skin.button);
+			position = EditorGUI.IndentedRect(position);
+			if (!canDraw)
+			{
+				var backgroundColor = GUI.backgroundColor;
+				//Red color
+				GUI.backgroundColor = new Color(1, 0.3254902f, 0.2901961f);
+				if (GUI.Button(position, content))
+					Debug.LogErrorFormat("Parameter count not match! Method name: {0}, button name: {1}.", methodInfo.Name, content.text);
+				GUI.backgroundColor = backgroundColor;
+				return;
+			}
+			if (GUI.Button(position, content))
+			{
+				foreach (var target in targets)
+				{
+					try
+					{
+						methodInfo.Invoke(target, buttonAttribute.Params.ToArray());
+					}
+					catch (Exception e)
+					{
+						if (target is UnityEngine.Object context)
+							Debug.LogError(e, context);
+						else
+							Debug.LogError(e);
 					}
 				}
 			}

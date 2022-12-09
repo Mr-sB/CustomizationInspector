@@ -91,7 +91,7 @@ namespace CustomizationInspector.Runtime
 		}
 	}
 	
-	[AttributeUsage(AttributeTargets.Field, Inherited = true, AllowMultiple = false)]
+	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Method, Inherited = true, AllowMultiple = false)]
 	public class FoldoutAttribute : Attribute
 	{
 		public readonly string GroupName;
