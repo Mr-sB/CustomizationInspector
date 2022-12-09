@@ -286,13 +286,20 @@ namespace CustomizationInspector.Editor
 				for (int i = buttonAttribute.Params.Count, len = parameters.Length; i < len; i++)
 				{
 					var parameter = parameters[i];
-					if (!parameter.HasDefaultValue)
+					if (parameter.HasDefaultValue)
 					{
-						canDraw = false;
-						break;
+						//Add default value
+						buttonAttribute.Params.Add(parameter.DefaultValue);
+						continue;
 					}
-					//Add default value
-					buttonAttribute.Params.Add(parameter.DefaultValue);
+					var defaultValueAttribute = parameter.GetCustomAttribute<System.ComponentModel.DefaultValueAttribute>();
+					if (defaultValueAttribute != null)
+					{
+						//Add default value
+						buttonAttribute.Params.Add(defaultValueAttribute.Value);
+						continue;
+					}
+					canDraw = false;
 				}
 			}
 			GUIContent content = new GUIContent(buttonAttribute.ShowName ?? methodInfo.Name);

@@ -42,12 +42,12 @@ namespace CustomizationInspector.Example
         }
         
         [Foldout("Foldout A")]
-        [Button(null, 2, "str")]
+        [Button(null, 2, "str", 1)]
         [Button("TestButtonWithParameter1Error")]
         [Button("TestButtonWithParameter1UseDefault", 1)]
-        private void TestButtonWithParameter1(int a, string b = "default")
+        private void TestButtonWithParameter1(int a, [System.ComponentModel.DefaultValue("default")]string b, int c = 99)
         {
-            Debug.LogError(nameof(TestButtonWithParameter1) + ": " + a + ", " + b);
+            Debug.LogError(nameof(TestButtonWithParameter1) + ": " + a + ", " + b + ", " + c);
         }
         
 #if UNITY_EDITOR
