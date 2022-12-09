@@ -8,7 +8,7 @@ using Object = UnityEngine.Object;
 
 namespace CustomizationInspector.Editor
 {
-	[CustomEditor(typeof(MonoBehaviour), true)]
+	[CustomEditor(typeof(Object), true)]
 	[CanEditMultipleObjects]
 	public class CustomizationMonoBehaviourEditor : UnityEditor.Editor
 	{
@@ -266,7 +266,7 @@ namespace CustomizationInspector.Editor
 			return $"--Method_{methodInfo}";
 		}
 		
-		private static void DrawMethod(MethodInfo methodInfo, Object[] targets)
+		public static void DrawMethod(MethodInfo methodInfo, Object[] targets)
 		{
 			object[] attributes = methodInfo.GetCustomAttributes(true);
 			foreach (Attribute attribute in attributes)
@@ -276,7 +276,7 @@ namespace CustomizationInspector.Editor
 			}
 		}
 
-		private static void DrawButton(MethodInfo methodInfo, Attribute attribute, Object[] targets)
+		public static void DrawButton(MethodInfo methodInfo, Attribute attribute, Object[] targets)
 		{
 			if (attribute is not ButtonAttribute buttonAttribute) return;
 			var parameters = methodInfo.GetParameters();
