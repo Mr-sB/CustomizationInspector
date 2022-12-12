@@ -4,11 +4,16 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace CustomizationInspector.Editor
 {
 	public static class FieldInspector
 	{
+		private const string EditorPrefsFoldoutKey = "CustomizationInspector.Editor.Foldout.{0}.{1}";
+		private const string SavedExpandedSaveKey = "CustomizationInspector.Editor.Foldout.SaveKey";
+		private static HashSet<string> foldoutSavedKeys = new HashSet<string>();
+
 		private static int currentKeyboardControl = -1;
 
 		private static bool editingArray = false;
@@ -23,23 +28,98 @@ namespace CustomizationInspector.Editor
 
 		private static int[] maskValues;
 
-		public static bool DrawFoldout(int hash, GUIContent content)
+		#region Foldout
+		[InitializeOnLoadMethod]
+		private static void Initialize()
 		{
-			string key = string.Concat(
-				"BehaviorDesigner.Editor.Foldout..",
-				hash,
-				".",
-				content.text
-			);
-			bool @bool = EditorPrefs.GetBool(key, true);
-			bool flag = EditorGUILayout.Foldout(@bool, content);
-			if (flag != @bool)
-			{
-				EditorPrefs.SetBool(key, flag);
-			}
-
-			return flag;
+			AssemblyReloadEvents.beforeAssemblyReload -= BeforeAssemblyReload;
+			AssemblyReloadEvents.beforeAssemblyReload += BeforeAssemblyReload;
+			AssemblyReloadEvents.afterAssemblyReload -= AfterAssemblyReload;
+			AssemblyReloadEvents.afterAssemblyReload += AfterAssemblyReload;
+			EditorApplication.quitting -= OnApplicationQuite;
+			EditorApplication.quitting += OnApplicationQuite;
 		}
+
+		private static void BeforeAssemblyReload()
+		{
+			//Save before reload
+			string value = string.Join(',', foldoutSavedKeys);
+			foldoutSavedKeys.Clear();
+			EditorPrefs.SetString(SavedExpandedSaveKey, value);
+		}
+
+		private static void AfterAssemblyReload()
+		{
+			//Load after reload
+			foreach (string key in EditorPrefs.GetString(SavedExpandedSaveKey, "").Split(',', StringSplitOptions.RemoveEmptyEntries))
+			{
+				if (!foldoutSavedKeys.Contains(key))
+					foldoutSavedKeys.Add(key);
+			}
+			EditorPrefs.DeleteKey(SavedExpandedSaveKey);
+		}
+		
+		private static void OnApplicationQuite()
+		{
+			//Delete key when application quite
+			foreach (var savedKey in foldoutSavedKeys)
+				EditorPrefs.DeleteKey(savedKey);
+			EditorPrefs.DeleteKey(SavedExpandedSaveKey);
+		}
+
+		public static bool DrawFoldout(string content, Object target)
+		{
+			int hashCode = 0;
+			if (target)
+				hashCode = target.GetInstanceID();
+			return DrawFoldout(LoadFoldoutExpand(GetFoldoutSaveKey(content, hashCode)), content);
+		}
+		
+		public static bool DrawFoldout(string content, int hashCode = 0)
+		{
+			return DrawFoldout(LoadFoldoutExpand(GetFoldoutSaveKey(content, hashCode)), content);
+		}
+		
+		public static bool DrawFoldout(bool expand, string content, Object target)
+		{
+			int hashCode = 0;
+			if (target)
+				hashCode = target.GetInstanceID();
+			return DrawFoldout(expand, content, hashCode);
+		}
+		
+		public static bool DrawFoldout(bool expand, string content, int hashCode = 0)
+		{
+			string key = GetFoldoutSaveKey(content, hashCode);
+			bool value = EditorGUILayout.Foldout(expand, content);
+			if (value != expand)
+				SaveFoldoutExpand(key, value);
+			return value;
+		}
+
+		public static string GetFoldoutSaveKey(string text, Object target)
+		{
+			return string.Format(EditorPrefsFoldoutKey, text, target.GetInstanceID());
+		}
+		
+		public static string GetFoldoutSaveKey(string text, int hashCode = 0)
+		{
+			return string.Format(EditorPrefsFoldoutKey, text, hashCode);
+		}
+
+		public static void SaveFoldoutExpand(string key, bool expand)
+		{
+			if (foldoutSavedKeys.Contains(key))
+				foldoutSavedKeys.Add(key);
+			EditorPrefs.SetBool(key, expand);
+		}
+
+		public static bool LoadFoldoutExpand(string key, bool defaultValue = true)
+		{
+			return EditorPrefs.GetBool(key, defaultValue);
+		}
+		
+		#endregion
 
 		private static object DrawFields(object obj, GUIContent content = null)
 		{
@@ -320,7 +400,7 @@ namespace CustomizationInspector.Editor
 			}
 
 			EditorGUILayout.BeginVertical();
-			if (DrawFoldout(content.text.GetHashCode(), content))
+			if (DrawFoldout(content.text))
 			{
 				EditorGUI.indentLevel++;
 				bool flag = content.text.GetHashCode() == editingFieldHash;
@@ -471,11 +551,6 @@ namespace CustomizationInspector.Editor
 				return EditorGUILayout.Vector3IntField(content, (Vector3Int) value);
 			}
 
-			if (fieldType == typeof(Vector3))
-			{
-				return EditorGUILayout.Vector3Field(content, (Vector3) value);
-			}
-
 			if (fieldType == typeof(Vector4))
 			{
 				return EditorGUILayout.Vector4Field(content.text, (Vector4) value);
@@ -495,6 +570,11 @@ namespace CustomizationInspector.Editor
 			{
 				return EditorGUILayout.ColorField(content, (Color) value);
 			}
+			
+			if (fieldType == typeof(Color32))
+			{
+				return EditorGUILayout.ColorField(content, (Color32) value);
+			}
 
 			if (fieldType == typeof(Rect))
 			{
@@ -504,7 +584,7 @@ namespace CustomizationInspector.Editor
 			if (fieldType == typeof(Matrix4x4))
 			{
 				GUILayout.BeginVertical();
-				if (DrawFoldout(content.text.GetHashCode(), content))
+				if (DrawFoldout(content.text))
 				{
 					EditorGUI.indentLevel++;
 					Matrix4x4 matrix4x = (Matrix4x4) value;
@@ -553,7 +633,9 @@ namespace CustomizationInspector.Editor
 
 			if (fieldType.IsEnum)
 			{
-				return EditorGUILayout.EnumPopup(content, (Enum) value);
+				if (fieldType.GetCustomAttribute<FlagsAttribute>() == null)
+					return EditorGUILayout.EnumPopup(content, (Enum) value);
+				return EditorGUILayout.EnumFlagsField(content, (Enum) value);
 			}
 
 			if (fieldType.IsClass || fieldType.IsValueType && !fieldType.IsPrimitive)
@@ -583,7 +665,7 @@ namespace CustomizationInspector.Editor
 						value = Activator.CreateInstance(fieldType, true);
 					}
 
-					if (DrawFoldout(hashCode, content))
+					if (DrawFoldout(content.text))
 					{
 						EditorGUI.indentLevel++;
 						value = DrawFields(value);

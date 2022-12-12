@@ -17,7 +17,7 @@ namespace CustomizationInspector.Runtime
                 Debug.LogError("Type is null!");
                 return null;
             }
-            return type.IsValueType ? Activator.CreateInstance(type) : null;  
+            return type.IsValueType ? GetInstanceFromType(type) : null;
         }
         
         /// <summary>
@@ -41,6 +41,17 @@ namespace CustomizationInspector.Runtime
             {
                 Debug.LogError("Type is null!");
                 return null;
+            }
+
+            if (type.IsAbstract)
+            {
+                Debug.LogError("Type is abstract!");
+                return null;
+            }
+
+            if (type.IsArray)
+            {
+                return Array.CreateInstance(type.GetElementType(), 0);
             }
             return Activator.CreateInstance(type);
         }
