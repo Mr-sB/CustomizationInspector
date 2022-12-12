@@ -115,8 +115,6 @@ namespace CustomizationInspector.Editor
 			        {
 				        DrawFoldout(foldoutInfo);
 			        }
-			        else
-				        EditorGUILayout.PropertyField(iterator, true);
 		        }
 	        }
 			
