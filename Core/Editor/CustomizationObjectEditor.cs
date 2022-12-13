@@ -27,19 +27,27 @@ namespace CustomizationInspector.Editor
 			//利用源码序列化
 			EditorGUI.BeginChangeCheck();
 			serializedObject.UpdateIfRequiredOrScript();
-			
-			foldoutDrawer.Draw();
-			
 			SerializedProperty iterator = serializedObject.GetIterator();
-			for (bool enterChildren = true; iterator.NextVisible(enterChildren); enterChildren = false)
+			
+			//m_Script property
+			bool moveNextSuccess = iterator.NextVisible(true);
+			if (moveNextSuccess)
+				using (new EditorGUI.DisabledScope(true))
+					EditorGUILayout.PropertyField(iterator, true);
+
+			//Foldout
+			foldoutDrawer.Draw();
+
+			//Remain property
+			if (moveNextSuccess)
 			{
-				using (new EditorGUI.DisabledScope("m_Script" == iterator.propertyPath))
+				while (iterator.NextVisible(false))
 				{
 					if (!foldoutDrawer.IsFoldout(iterator))
 						EditorGUILayout.PropertyField(iterator, true);
 				}
 			}
-			
+
 			serializedObject.ApplyModifiedProperties();
 			EditorGUI.EndChangeCheck();
 			
