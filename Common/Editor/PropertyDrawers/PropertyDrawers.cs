@@ -13,6 +13,7 @@ namespace CustomizationInspector.Editor
 		protected BindingFlags mBindingFlags = BindingFlags.Instance | BindingFlags.NonPublic |
 		                                       BindingFlags.Public | BindingFlags.Static;
 		protected static MemberTypes mMemberTypes = MemberTypes.Field | MemberTypes.Property | MemberTypes.Method;
+		private MemberInfo[] memberInfos;
 
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 		{
@@ -37,7 +38,8 @@ namespace CustomizationInspector.Editor
 			var	targetType = target.GetType();
 			//获取判断的名称
 			var hideIfAttribute = attribute as HideIfAttribute;
-			MemberInfo[] memberInfos = targetType.GetMember(hideIfAttribute.MemberName, mMemberTypes, mBindingFlags);
+			if (memberInfos == null)
+				memberInfos = targetType.GetMember(hideIfAttribute.MemberName, mMemberTypes, mBindingFlags);
 			for (int i = 0, len = memberInfos.Length; i < len; i++)
 			{
 				try
@@ -70,7 +72,8 @@ namespace CustomizationInspector.Editor
 		protected BindingFlags mBindingFlags = BindingFlags.Instance | BindingFlags.NonPublic |
 				BindingFlags.Public | BindingFlags.Static;
 		protected static MemberTypes mMemberTypes = MemberTypes.Field | MemberTypes.Property | MemberTypes.Method;
-		
+		private MemberInfo[] memberInfos;
+
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 		{
 			if (IsShow(property))
@@ -93,7 +96,8 @@ namespace CustomizationInspector.Editor
 			var targetType = target.GetType();
 			//获取判断的名称
 			var showIfAttribute = attribute as ShowIfAttribute;
-			MemberInfo[] memberInfos = targetType.GetMember(showIfAttribute.MemberName, mMemberTypes, mBindingFlags);
+			if (memberInfos == null)
+				memberInfos = targetType.GetMember(showIfAttribute.MemberName, mMemberTypes, mBindingFlags);
 			for (int i = 0, len = memberInfos.Length; i < len; i++)
 			{
 				try
@@ -144,6 +148,8 @@ namespace CustomizationInspector.Editor
 		protected BindingFlags mBindingFlags = BindingFlags.Instance | BindingFlags.NonPublic |
 				BindingFlags.Public | BindingFlags.Static;
 		protected static MemberTypes mMemberTypes = MemberTypes.Field | MemberTypes.Property | MemberTypes.Method;
+		private MemberInfo[] memberInfos;
+		private GUIContent[] displayedOptions;
 		
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 		{
@@ -162,10 +168,18 @@ namespace CustomizationInspector.Editor
 			string targetFieldValue = (fieldInfo.GetValue(target) ?? string.Empty).ToString();
 
 			int selectedIndex = -1;
-			GUIContent[] displayedOptions = new GUIContent[targetValue.Count];
+			bool isNewDisplayedOptions = false;
+			if (displayedOptions == null || displayedOptions.Length != targetValue.Count)
+			{
+				isNewDisplayedOptions = true;
+				displayedOptions = new GUIContent[targetValue.Count];
+			}
 			for (int i = 0; i < displayedOptions.Length; i++)
 			{
-				displayedOptions[i] = new GUIContent(targetValue[i].ToString());
+				if (isNewDisplayedOptions)
+					displayedOptions[i] = new GUIContent(targetValue[i].ToString());
+				else
+					displayedOptions[i].text = targetValue[i].ToString();
 				if (displayedOptions[i].text == targetFieldValue)
 					selectedIndex = i;
 			}
@@ -205,7 +219,8 @@ namespace CustomizationInspector.Editor
 			//获取源数据数组数据
 			IList targetValue = null;
 			ValueDropdownAttribute valueDropdownAttribute = attribute as ValueDropdownAttribute;
-			MemberInfo[] memberInfos = targetType.GetMember(valueDropdownAttribute.MemberName, mMemberTypes, mBindingFlags);
+			if (memberInfos == null)
+				memberInfos = targetType.GetMember(valueDropdownAttribute.MemberName, mMemberTypes, mBindingFlags);
 			for (int i = 0, len = memberInfos.Length; i < len; i++)
 			{
 				try

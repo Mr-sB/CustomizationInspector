@@ -8,11 +8,9 @@ namespace CustomizationInspector.Editor
 	[CustomPropertyDrawer(typeof(InfoBoxAttribute))]
 	internal class InfoBoxDrawer : DecoratorDrawer
 	{
-		InfoBoxAttribute infoBox;
 		public override void OnGUI(Rect position)
 		{
-			if (infoBox == null)
-				infoBox = attribute as InfoBoxAttribute;
+			var infoBox = attribute as InfoBoxAttribute;
 			position = EditorGUI.IndentedRect(position);
 			position.height -= 2;
 			EditorGUI.HelpBox(position, infoBox.Description, (UnityEditor.MessageType) infoBox.MessageType);
