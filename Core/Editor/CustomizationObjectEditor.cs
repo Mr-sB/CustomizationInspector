@@ -27,10 +27,10 @@ namespace CustomizationInspector.Editor
 			//利用源码序列化
 			EditorGUI.BeginChangeCheck();
 			serializedObject.UpdateIfRequiredOrScript();
-			SerializedProperty iterator = serializedObject.GetIterator();
 			
 			foldoutDrawer.Draw();
 			
+			SerializedProperty iterator = serializedObject.GetIterator();
 			for (bool enterChildren = true; iterator.NextVisible(enterChildren); enterChildren = false)
 			{
 				using (new EditorGUI.DisabledScope("m_Script" == iterator.propertyPath))
