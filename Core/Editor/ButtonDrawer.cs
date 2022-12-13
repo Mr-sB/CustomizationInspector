@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using CustomizationInspector.Runtime;
 using UnityEditor;
@@ -9,10 +10,27 @@ namespace CustomizationInspector.Editor
 {
     public class ButtonDrawer : Drawer
     {
-	    private FoldoutDrawer foldoutDrawer;
+	    private static List<object> parameters = new List<object>();
+	    private MethodInfo[] methodInfos;
+	    private Dictionary<MethodInfo, List<ButtonAttribute>> methodButtonAttributes;
+		private FoldoutDrawer foldoutDrawer;
 	    
 	    public ButtonDrawer(SerializedObject serializedObject, Object[] targets) : base(serializedObject, targets)
         {
+	        methodInfos = targetType.GetMethods(BindingFlags);
+	        methodButtonAttributes = new Dictionary<MethodInfo, List<ButtonAttribute>>(methodInfos.Length);
+	        for (var i = 0; i < methodInfos.Length; i++)
+	        {
+		        var methodInfo = methodInfos[i];
+		        object[] attributes = methodInfo.GetCustomAttributes(true);
+		        List<ButtonAttribute> buttonAttributes = new List<ButtonAttribute>();
+		        methodButtonAttributes.Add(methodInfo, buttonAttributes);
+		        foreach (object attribute in attributes)
+		        {
+			        if (attribute is ButtonAttribute buttonAttribute)
+				        buttonAttributes.Add(buttonAttribute);
+		        }
+	        }
         }
 
 	    public void SetFoldoutDrawer(FoldoutDrawer drawer)
@@ -23,7 +41,6 @@ namespace CustomizationInspector.Editor
         
 	    public override void Draw()
 	    {
-		    MethodInfo[] methodInfos = targetType.GetMethods(BindingFlags);
 		    foreach (var methodInfo in methodInfos)
 		    {
 			    if (foldoutDrawer != null && foldoutDrawer.IsFoldout(methodInfo)) continue;
@@ -31,36 +48,47 @@ namespace CustomizationInspector.Editor
 		    }
 	    }
 
-	    public static void DrawButtons(MethodInfo methodInfo, Object[] targets)
+	    public void DrawButtons(MethodInfo methodInfo, Object[] targets)
 		{
-			object[] attributes = methodInfo.GetCustomAttributes(true);
-			foreach (Attribute attribute in attributes)
+			if (methodButtonAttributes.TryGetValue(methodInfo, out var buttonAttributes))
 			{
-				if (attribute is ButtonAttribute buttonAttribute)
+				foreach (var buttonAttribute in buttonAttributes)
 					DrawButton(methodInfo, buttonAttribute, targets);
+			}
+			else
+			{
+				object[] attributes = methodInfo.GetCustomAttributes(true);
+				foreach (Attribute attribute in attributes)
+				{
+					if (attribute is ButtonAttribute buttonAttribute)
+						DrawButton(methodInfo, buttonAttribute, targets);
+				}
 			}
 		}
 
 		public static void DrawButton(MethodInfo methodInfo, ButtonAttribute buttonAttribute, Object[] targets)
 		{
-			var parameters = methodInfo.GetParameters();
-			bool canDraw = buttonAttribute.Params.Count <= parameters.Length;
-			if (canDraw)
+			parameters.Clear();
+			if (buttonAttribute.Params != null)
+				parameters.AddRange(buttonAttribute.Params);
+			var parameterInfos = methodInfo.GetParameters();
+			bool canDraw = parameters.Count <= parameterInfos.Length;
+			if (parameters.Count < parameterInfos.Length)
 			{
-				for (int i = buttonAttribute.Params.Count, len = parameters.Length; i < len; i++)
+				for (int i = parameters.Count, len = parameterInfos.Length; i < len; i++)
 				{
-					var parameter = parameters[i];
+					var parameter = parameterInfos[i];
 					if (parameter.HasDefaultValue)
 					{
 						//Add default value
-						buttonAttribute.Params.Add(parameter.DefaultValue);
+						parameters.Add(parameter.DefaultValue);
 						continue;
 					}
 					var defaultValueAttribute = parameter.GetCustomAttribute<System.ComponentModel.DefaultValueAttribute>();
 					if (defaultValueAttribute != null)
 					{
 						//Add default value
-						buttonAttribute.Params.Add(defaultValueAttribute.Value);
+						parameters.Add(defaultValueAttribute.Value);
 						continue;
 					}
 					canDraw = false;
@@ -85,7 +113,7 @@ namespace CustomizationInspector.Editor
 				{
 					try
 					{
-						methodInfo.Invoke(target, buttonAttribute.Params.ToArray());
+						methodInfo.Invoke(target, parameters.ToArray());
 					}
 					catch (Exception e)
 					{
