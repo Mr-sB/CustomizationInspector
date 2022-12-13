@@ -35,7 +35,7 @@ namespace CustomizationInspector.Editor
 			{
 				using (new EditorGUI.DisabledScope("m_Script" == iterator.propertyPath))
 				{
-					if(!foldoutDrawer.DrawnProperty(iterator))
+					if (!foldoutDrawer.IsFoldout(iterator))
 						EditorGUILayout.PropertyField(iterator, true);
 				}
 			}

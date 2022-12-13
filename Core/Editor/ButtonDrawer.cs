@@ -26,7 +26,7 @@ namespace CustomizationInspector.Editor
 		    MethodInfo[] methodInfos = targetType.GetMethods(BindingFlags);
 		    foreach (var methodInfo in methodInfos)
 		    {
-			    if (foldoutDrawer != null && foldoutDrawer.DrawnMethod(methodInfo)) continue;
+			    if (foldoutDrawer != null && foldoutDrawer.IsFoldout(methodInfo)) continue;
 			    DrawButtons(methodInfo, targets);
 		    }
 	    }

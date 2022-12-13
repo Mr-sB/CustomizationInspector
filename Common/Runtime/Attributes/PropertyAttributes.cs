@@ -91,6 +91,28 @@ namespace CustomizationInspector.Runtime
 		}
 	}
 	
+	/// <example>
+	/// <code>
+	/// public class MyComponent : MonoBehaviour
+	/// {
+	/// 	[FoldoutAttribute("Foldout A")]
+	/// 	public int intValue;
+	/// 	[FoldoutAttribute("Foldout A/Sub Foldout")]
+	/// 	public int intValue;
+	/// 
+	/// 	[FoldoutAttribute("Foldout A")]
+	/// 	private void Jump()
+	/// 	{
+	/// 		// ...
+	/// 	}
+	/// 	[FoldoutAttribute("Foldout A/Sub Foldout")]
+	/// 	private void Fly()
+	/// 	{
+	/// 		// ...
+	/// 	}
+	/// }
+	/// </code>
+	/// </example>
 	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Method, Inherited = true, AllowMultiple = false)]
 	public class FoldoutAttribute : Attribute
 	{

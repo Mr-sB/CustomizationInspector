@@ -99,7 +99,7 @@ namespace CustomizationInspector.Editor
 
 		public static string GetFoldoutSaveKey(string text, Object target)
 		{
-			return string.Format(EditorPrefsFoldoutKey, text, target.GetInstanceID());
+			return GetFoldoutSaveKey(text, target.GetInstanceID());
 		}
 		
 		public static string GetFoldoutSaveKey(string text, int hashCode = 0)

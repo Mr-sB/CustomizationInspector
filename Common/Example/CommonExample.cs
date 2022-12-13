@@ -13,7 +13,7 @@ namespace CustomizationInspector.Example
         [HideIf(nameof(Hide))] //支持值为bool的field、property、method
         public Vector3 HideField;
 
-        [Foldout("Foldout A")]
+        [Foldout("Foldout A/Sub1")]
         [Rename("是否显示")]
         public bool Show;
 
@@ -30,7 +30,7 @@ namespace CustomizationInspector.Example
 
         private string[] DropdownArray = {"Value1", "Value2", "Value3"};
 
-        [Foldout("Foldout A")]
+        [Foldout("Foldout A/Sub1/Sub2")]
         [InfoBox("InfoBox!", MessageType.Info)]
         public Vector3 InfoBoxField;
 
