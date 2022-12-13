@@ -52,6 +52,12 @@ namespace CustomizationInspector.Editor
 	        DrawMethod = handler;
         }
         
+        public override void Draw()
+        {
+	        foreach (var foldoutInfo in foldoutRoots)
+		        DrawFoldout(foldoutInfo, true);
+        }
+        
         private void Setup()
         {
 			var iterator = serializedObject.GetIterator();
@@ -147,13 +153,7 @@ namespace CustomizationInspector.Editor
 		        parent = child;
 	        }
         }
-        
-        public void Draw()
-        {
-	        foreach (var foldoutInfo in foldoutRoots)
-		        DrawFoldout(foldoutInfo, true);
-        }
-        
+
         private void DrawFoldout(FoldoutInfo foldoutInfo, bool parentExpand)
         {
 	        if (!parentExpand) return;

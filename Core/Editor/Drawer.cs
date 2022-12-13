@@ -22,5 +22,7 @@ namespace CustomizationInspector.Editor
             this.targets = targets;
             targetType = target.GetType();
         }
+
+        public abstract void Draw();
     }
 }

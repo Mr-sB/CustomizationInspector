@@ -21,7 +21,7 @@ namespace CustomizationInspector.Editor
 			drawer?.SetDrawMethodHandler(DrawButtons);
 	    }
         
-	    public void Draw()
+	    public override void Draw()
 	    {
 		    MethodInfo[] methodInfos = targetType.GetMethods(BindingFlags);
 		    foreach (var methodInfo in methodInfos)
