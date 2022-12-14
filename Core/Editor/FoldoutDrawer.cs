@@ -8,6 +8,12 @@ using Object = UnityEngine.Object;
 
 namespace CustomizationInspector.Editor
 {
+	public enum FoldoutStyle
+	{
+		Normal,
+		Header,
+	}
+	
     public class FoldoutDrawer : Drawer
     {
         private class FoldoutInfo
@@ -58,15 +64,17 @@ namespace CustomizationInspector.Editor
         public const char NameSeparator = '/';
         
         public DrawMethodEventHandler DrawMethod;
-        
+
+        public readonly FoldoutStyle Style;
         private Dictionary<string, string> foldoutMembers; //key: memberName  value: root groupName
         private Dictionary<string, FoldoutInfo> foldoutCache; //key: groupName  value: foldoutInfo
         private List<FoldoutInfo> foldoutRoots;
         private HashSet<string> drawnFoldoutRoots;
         private HashSet<string> drawnMembers;
 
-        public FoldoutDrawer(SerializedObject serializedObject, Object[] targets) : base(serializedObject, targets)
+        public FoldoutDrawer(SerializedObject serializedObject, Object[] targets, FoldoutStyle style = FoldoutStyle.Header) : base(serializedObject, targets)
         {
+	        Style = style;
 	        foldoutMembers = new Dictionary<string, string>();
 	        foldoutCache = new Dictionary<string, FoldoutInfo>();
 	        foldoutRoots = new List<FoldoutInfo>();
@@ -248,7 +256,15 @@ namespace CustomizationInspector.Editor
 	        if (foldoutInfo.Parent == null || foldoutInfo.Parent.ExpandInInspector)
 	        {
 		        //Draw self
-		        foldoutInfo.Expand = FieldInspector.DrawFoldout(foldoutInfo.Expand, foldoutInfo.ShowName, target);
+		        if (Style == FoldoutStyle.Header)
+		        {
+			        Rect position = GUILayoutUtility.GetRect(EditorGUIUtility.fieldWidth, EditorGUIUtility.fieldWidth,
+				        EditorGUIUtility.singleLineHeight, EditorGUIUtility.singleLineHeight, EditorStyles.foldoutHeader);
+			        position = EditorGUI.IndentedRect(position);
+			        foldoutInfo.Expand = FieldInspector.DrawFoldoutHeader(position, foldoutInfo.Expand, foldoutInfo.ShowName, target, null);
+		        }
+		        else
+			        foldoutInfo.Expand = FieldInspector.DrawFoldout(foldoutInfo.Expand, foldoutInfo.ShowName, target);
 	        }
 			//Do not draw when not expandInInspector
 			if (foldoutInfo.ExpandInInspector)

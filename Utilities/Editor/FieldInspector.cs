@@ -14,19 +14,16 @@ namespace CustomizationInspector.Editor
 		private const string SavedExpandedSaveKey = "CustomizationInspector.Editor.Foldout.SaveKey";
 		private static HashSet<string> foldoutSavedKeys = new HashSet<string>();
 
-		private static int currentKeyboardControl = -1;
-
-		private static bool editingArray = false;
-
-		private static int savedArraySize = -1;
-
-		private static int editingFieldHash;
-
-		private static HashSet<int> drawnObjects = new HashSet<int>();
-
+		private static GUIContent tmpContent = new GUIContent();
 		private static string[] layerNames;
 
 		private static int[] maskValues;
+
+		private static GUIContent TempContent(string text)
+		{
+			tmpContent.text = text;
+			return tmpContent;
+		}
 
 		#region Foldout
 		[InitializeOnLoadMethod]
@@ -67,33 +64,137 @@ namespace CustomizationInspector.Editor
 			EditorPrefs.DeleteKey(SavedExpandedSaveKey);
 		}
 
-		public static bool DrawFoldout(string content, Object target)
+		public static bool DrawFoldout(string content, Object target, bool toggleOnLabelClick = false)
 		{
 			int hashCode = 0;
 			if (target)
 				hashCode = target.GetInstanceID();
-			return DrawFoldout(LoadFoldoutExpand(GetFoldoutSaveKey(content, hashCode)), content);
+			return DrawFoldout(content, hashCode, toggleOnLabelClick);
 		}
 		
-		public static bool DrawFoldout(string content, int hashCode = 0)
+		public static bool DrawFoldout(string content, int hashCode, bool toggleOnLabelClick = false)
 		{
-			return DrawFoldout(LoadFoldoutExpand(GetFoldoutSaveKey(content, hashCode)), content);
+			return DrawFoldout(LoadFoldoutExpand(GetFoldoutSaveKey(content, hashCode)), content, hashCode, toggleOnLabelClick);
 		}
 		
-		public static bool DrawFoldout(bool expand, string content, Object target)
+		public static bool DrawFoldout(bool expand, string content, Object target, bool toggleOnLabelClick = false)
 		{
 			int hashCode = 0;
 			if (target)
 				hashCode = target.GetInstanceID();
-			return DrawFoldout(expand, content, hashCode);
+			return DrawFoldout(expand, content, hashCode, toggleOnLabelClick);
 		}
 		
-		public static bool DrawFoldout(bool expand, string content, int hashCode = 0)
+		public static bool DrawFoldout(bool expand, string content, int hashCode, bool toggleOnLabelClick = false)
 		{
 			string key = GetFoldoutSaveKey(content, hashCode);
-			bool value = EditorGUILayout.Foldout(expand, content);
+			bool value = EditorGUILayout.Foldout(expand, content, toggleOnLabelClick);
 			if (value != expand)
 				SaveFoldoutExpand(key, value);
+			return value;
+		}
+		
+		public static bool DrawFoldout(Rect position, string content, Object target, bool toggleOnLabelClick = false)
+		{
+			int hashCode = 0;
+			if (target)
+				hashCode = target.GetInstanceID();
+			return DrawFoldout(position, content, hashCode, toggleOnLabelClick);
+		}
+		
+		public static bool DrawFoldout(Rect position, string content, int hashCode, bool toggleOnLabelClick = false)
+		{
+			return DrawFoldout(position, LoadFoldoutExpand(GetFoldoutSaveKey(content, hashCode)), content, hashCode, toggleOnLabelClick);
+		}
+		
+		public static bool DrawFoldout(Rect position, bool expand, string content, Object target, bool toggleOnLabelClick = false)
+		{
+			int hashCode = 0;
+			if (target)
+				hashCode = target.GetInstanceID();
+			return DrawFoldout(position, expand, content, hashCode, toggleOnLabelClick);
+		}
+		
+		public static bool DrawFoldout(Rect position, bool expand, string content, int hashCode, bool toggleOnLabelClick = false)
+		{
+			string key = GetFoldoutSaveKey(content, hashCode);
+			bool value = EditorGUI.Foldout(position, expand, content, toggleOnLabelClick);
+			if (value != expand)
+				SaveFoldoutExpand(key, value);
+			return value;
+		}
+		
+		public static bool DrawFoldoutHeader(string content, Object target, Action drawInside)
+		{
+			int hashCode = 0;
+			if (target)
+				hashCode = target.GetInstanceID();
+			return DrawFoldoutHeader(content, hashCode, drawInside);
+		}
+		
+		public static bool DrawFoldoutHeader(string content, int hashCode, Action drawInside)
+		{
+			return DrawFoldoutHeader(LoadFoldoutExpand(GetFoldoutSaveKey(content, hashCode)), content, hashCode, drawInside);
+		}
+		
+		public static bool DrawFoldoutHeader(bool expand, string content, Object target, Action drawInside)
+		{
+			int hashCode = 0;
+			if (target)
+				hashCode = target.GetInstanceID();
+			return DrawFoldoutHeader(expand, content, hashCode, drawInside);
+		}
+		
+		public static bool DrawFoldoutHeader(bool expand, string content, int hashCode, Action drawInside)
+		{
+			string key = GetFoldoutSaveKey(content, hashCode);
+			bool value = EditorGUILayout.BeginFoldoutHeaderGroup(expand, content);
+			EditorGUILayout.EndFoldoutHeaderGroup();
+			if (value != expand)
+				SaveFoldoutExpand(key, value);
+			if (value && drawInside != null)
+			{
+				EditorGUI.indentLevel++;
+				drawInside();
+				EditorGUI.indentLevel--;
+			}
+			return value;
+		}
+		
+		public static bool DrawFoldoutHeader(Rect position, string content, Object target, Action drawInside)
+		{
+			int hashCode = 0;
+			if (target)
+				hashCode = target.GetInstanceID();
+			return DrawFoldoutHeader(position, content, hashCode, drawInside);
+		}
+		
+		public static bool DrawFoldoutHeader(Rect position, string content, int hashCode, Action drawInside)
+		{
+			return DrawFoldoutHeader(position, LoadFoldoutExpand(GetFoldoutSaveKey(content, hashCode)), content, hashCode, drawInside);
+		}
+		
+		public static bool DrawFoldoutHeader(Rect position, bool expand, string content, Object target, Action drawInside)
+		{
+			int hashCode = 0;
+			if (target)
+				hashCode = target.GetInstanceID();
+			return DrawFoldoutHeader(position, expand, content, hashCode, drawInside);
+		}
+		
+		public static bool DrawFoldoutHeader(Rect position, bool expand, string content, int hashCode, Action drawInside)
+		{
+			string key = GetFoldoutSaveKey(content, hashCode);
+			bool value = EditorGUI.BeginFoldoutHeaderGroup(position, expand, content);
+			EditorGUI.EndFoldoutHeaderGroup();
+			if (value != expand)
+				SaveFoldoutExpand(key, value);
+			if (value && drawInside != null)
+			{
+				EditorGUI.indentLevel++;
+				drawInside();
+				EditorGUI.indentLevel--;
+			}
 			return value;
 		}
 
@@ -121,7 +222,7 @@ namespace CustomizationInspector.Editor
 		
 		#endregion
 
-		private static object DrawFields(object obj, GUIContent content = null)
+		private static object DrawFields(object obj, GUIContent content = null, Object target = null)
 		{
 			if (obj == null)
 			{
@@ -159,7 +260,7 @@ namespace CustomizationInspector.Editor
 						}
 
 						EditorGUI.BeginChangeCheck();
-						object value = DrawFieldLayout(content, fields[j].FieldType, fields[j].GetValue(obj));
+						object value = DrawFieldLayout(content, fields[j].FieldType, fields[j].GetValue(obj), target);
 						if (EditorGUI.EndChangeCheck())
 						{
 							fields[j].SetValue(obj, value);
@@ -337,22 +438,22 @@ namespace CustomizationInspector.Editor
 //			return list;
 //		}
 
-		public static object DrawFieldLayout(GUIContent content, object value)
+		public static object DrawFieldLayout(GUIContent content, object value, Object target)
 		{
-			return DrawFieldLayout(content, value.GetType(), value);
+			return DrawFieldLayout(content, value.GetType(), value, target);
 		}
 		
-		public static object DrawFieldLayout(GUIContent content, Type fieldType, object value)
+		public static object DrawFieldLayout(GUIContent content, Type fieldType, object value, Object target)
 		{
 			if (typeof(IList).IsAssignableFrom(fieldType))
 			{
-				return DrawArrayFieldLayout(content, fieldType, value);
+				return DrawArrayFieldLayout(content, fieldType, value, target);
 			}
 
-			return DrawSingleFieldLayout(content, fieldType, value);
+			return DrawSingleFieldLayout(content, fieldType, value, target);
 		}
 
-		private static object DrawArrayFieldLayout(GUIContent content, Type fieldType, object value)
+		private static object DrawArrayFieldLayout(GUIContent content, Type fieldType, object value, Object target)
 		{
 			Type type;
 			if (fieldType.IsArray)
@@ -400,89 +501,59 @@ namespace CustomizationInspector.Editor
 			}
 
 			EditorGUILayout.BeginVertical();
-			if (DrawFoldout(content.text))
+			int hashCode = value?.GetHashCode() ?? 0;
+			if (target)
+				hashCode ^= target.GetHashCode();
+			bool expand = LoadFoldoutExpand(GetFoldoutSaveKey(content.text, hashCode));
+			if (DrawFoldout(expand, content.text, hashCode))
 			{
 				EditorGUI.indentLevel++;
-				bool flag = content.text.GetHashCode() == editingFieldHash;
-				int num = (!flag) ? list.Count : savedArraySize;
-				int num2 = EditorGUILayout.IntField("Size", num);
-				if (flag && editingArray &&
-				    (GUIUtility.keyboardControl != currentKeyboardControl ||
-				     Event.current.keyCode == KeyCode.Return))
+				int size = list.Count;
+				int newSize = EditorGUILayout.DelayedIntField("Size", size);
+				if (newSize != list.Count)
 				{
-					if (num2 != list.Count)
+					Array newArray = Array.CreateInstance(type, newSize);
+					for (int i = 0; i < newSize; i++)
 					{
-						Array array2 = Array.CreateInstance(type, num2);
-						int num3 = -1;
-						for (int i = 0; i < num2; i++)
+						object element = null;
+						if (i < list.Count)
+							element = list[i];
+						else if(!typeof(Object).IsAssignableFrom(type) && !typeof(string).IsAssignableFrom(type))
+							element = Activator.CreateInstance(type, true);
+						
+						newArray.SetValue(element, i);
+					}
+
+					if (fieldType.IsArray)
+					{
+						list = newArray;
+					}
+					else
+					{
+						if (fieldType.IsGenericType)
 						{
-							if (i < list.Count)
+							list = (Activator.CreateInstance(typeof(List<>).MakeGenericType(new Type[]
 							{
-								num3 = i;
-							}
-
-							if (num3 == -1)
-							{
-								break;
-							}
-
-							object value2 = list[num3];
-							if (i >= list.Count && !typeof(UnityEngine.Object).IsAssignableFrom(type) &&
-							    !typeof(string).IsAssignableFrom(type))
-							{
-								value2 = Activator.CreateInstance(list[num3].GetType(), true);
-							}
-
-							array2.SetValue(value2, i);
-						}
-
-						if (fieldType.IsArray)
-						{
-							list = array2;
+								type
+							}), true) as IList);
 						}
 						else
 						{
-							if (fieldType.IsGenericType)
-							{
-								list = (Activator.CreateInstance(typeof(List<>).MakeGenericType(new Type[]
-								{
-									type
-								}), true) as IList);
-							}
-							else
-							{
-								list = (Activator.CreateInstance(fieldType, true) as IList);
-							}
+							list = (Activator.CreateInstance(fieldType, true) as IList);
+						}
 
-							for (int j = 0; j < array2.Length; j++)
-							{
-								list.Add(array2.GetValue(j));
-							}
+						for (int j = 0; j < newArray.Length; j++)
+						{
+							list.Add(newArray.GetValue(j));
 						}
 					}
-
-					editingArray = false;
-					savedArraySize = -1;
-					editingFieldHash = -1;
-					GUI.changed = (true);
-				}
-				else if (num2 != num)
-				{
-					if (!editingArray)
-					{
-						currentKeyboardControl = GUIUtility.keyboardControl;
-						editingArray = true;
-						editingFieldHash = content.text.GetHashCode();
-					}
-
-					savedArraySize = num2;
+					GUI.changed = true;
 				}
 
 				for (int k = 0; k < list.Count; k++)
 				{
 					GUILayout.BeginHorizontal();
-					content.text = "Element " + k;
-					list[k] = DrawFieldLayout(content, type, list[k]);
+					list[k] = DrawFieldLayout(TempContent("Element " + k), type, list[k], target);
 					GUILayout.Space(6f);
 					GUILayout.EndHorizontal();
 				}
@@ -494,7 +565,7 @@ namespace CustomizationInspector.Editor
 			return list;
 		}
 
-		private static object DrawSingleFieldLayout(GUIContent content, Type fieldType, object value)
+		private static object DrawSingleFieldLayout(GUIContent content, Type fieldType, object value, Object target)
 		{
 			if (fieldType == typeof(int))
 			{
@@ -584,7 +655,11 @@ namespace CustomizationInspector.Editor
 			if (fieldType == typeof(Matrix4x4))
 			{
 				GUILayout.BeginVertical();
-				if (DrawFoldout(content.text))
+				int hashCode = value?.GetHashCode() ?? 0;
+				if (target)
+					hashCode ^= target.GetHashCode();
+				bool expand = LoadFoldoutExpand(GetFoldoutSaveKey(content.text, hashCode));
+				if (DrawFoldout(expand, content.text, hashCode))
 				{
 					EditorGUI.indentLevel++;
 					Matrix4x4 matrix4x = (Matrix4x4) value;
@@ -645,15 +720,8 @@ namespace CustomizationInspector.Editor
 					return null;
 				}
 
-				int hashCode = content.text.GetHashCode();
-				if (drawnObjects.Contains(hashCode))
-				{
-					return null;
-				}
-
 				try
 				{
-					drawnObjects.Add(hashCode);
 					GUILayout.BeginVertical();
 					if (value == null)
 					{
@@ -665,14 +733,12 @@ namespace CustomizationInspector.Editor
 						value = Activator.CreateInstance(fieldType, true);
 					}
 
-					if (DrawFoldout(content.text))
+					if (DrawFoldout(content.text, target))
 					{
 						EditorGUI.indentLevel++;
-						value = DrawFields(value);
+						value = DrawFields(value, null, target);
 						EditorGUI.indentLevel--;
 					}
-
-					drawnObjects.Remove(hashCode);
 					GUILayout.EndVertical();
 					object result = value;
 					return result;
@@ -680,7 +746,6 @@ namespace CustomizationInspector.Editor
 				catch (Exception)
 				{
 					GUILayout.EndVertical();
-					drawnObjects.Remove(hashCode);
 					return null;
 				}
 			}

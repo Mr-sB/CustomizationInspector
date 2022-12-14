@@ -19,7 +19,7 @@ namespace CustomizationInspector.Editor
 		
 		void OnDisable()
 		{
-			foldoutDrawer.SaveExpand();
+			foldoutDrawer?.SaveExpand();
 		}
 
 		public override void OnInspectorGUI()

@@ -10,17 +10,24 @@ namespace CustomizationInspector.Runtime
 		Error,
 	}
 
-	[AttributeUsage(AttributeTargets.Method, Inherited = true, AllowMultiple = true)]
+	[AttributeUsage(AttributeTargets.Method, Inherited = true, AllowMultiple = false)]
 	public class ButtonAttribute : Attribute
 	{
-
 		public readonly string ShowName;
-		public readonly object[] Params;
 
-		public ButtonAttribute(string showName = null, params object[] parameters)
+		public ButtonAttribute(string showName = null)
 		{
 			ShowName = showName;
-			Params = parameters;
+		}
+
+		public override int GetHashCode()
+		{
+			return ShowName != null ? ShowName.GetHashCode() ^ base.GetHashCode() : base.GetHashCode();
+		}
+
+		public override bool Equals(object obj)
+		{
+			return this == obj;
 		}
 	}
 

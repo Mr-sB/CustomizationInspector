@@ -1,10 +1,19 @@
-﻿using CustomizationInspector.Runtime;
+﻿using System;
+using CustomizationInspector.Runtime;
 using UnityEngine;
 
 namespace CustomizationInspector.Example
 {
     public class CommonExample : MonoBehaviour
     {
+        [Serializable]
+        public class TestClass
+        {
+            public int intValue;
+            public GameObject goValue;
+            public Rect rectValue;
+        }
+        
         [Foldout("Foldout A")]
         [Rename("是否隐藏")]
         public bool Hide;
@@ -34,7 +43,6 @@ namespace CustomizationInspector.Example
         [InfoBox("InfoBox!", MessageType.Info)]
         public Vector3 InfoBoxField;
 
-        [Button]
         [Button("测试按钮")]
         private void TestButton()
         {
@@ -42,19 +50,15 @@ namespace CustomizationInspector.Example
         }
         
         [Foldout("Foldout A")]
-        [Button(null, 2, "str", 1)]
-        [Button("TestButtonWithParameter1Error")]
-        [Button("TestButtonWithParameter1UseDefault", 1)]
-        private void TestButtonWithParameter1(int a, [System.ComponentModel.DefaultValue("default")]string b, int c = 99)
+        [Button]
+        private void TestButtonWithParameter1([System.ComponentModel.DefaultValue("default")]string str, Color color, int number = 99)
         {
-            Debug.LogError(nameof(TestButtonWithParameter1) + ": " + a + ", " + b + ", " + c);
+            Debug.LogError(nameof(TestButtonWithParameter1) + ": " + str + ", " + color + ", " + number);
         }
         
-#if UNITY_EDITOR
         [Foldout("Foldout B")]
-        //IL2CPP does not support attributes with object arguments that are array types. But Mono support.
-        [Button(null, new []{1,2,3})]
-        private void TestButtonWithParameter2(int[] array)
+        [Button]
+        private void TestButtonWithParameter2(Vector3[] array)
         {
             if (array == null)
             {
@@ -64,29 +68,11 @@ namespace CustomizationInspector.Example
             Debug.LogError(nameof(TestButtonWithParameter2) + ": " + string.Join(",", array));
         }
         
-        [Foldout("Foldout C")]
-        [Button(null, new object[]{null})]
-        private void TestButtonWithParameter3(int[] array)
+        [Foldout("Foldout A/Sub1/Sub2/Sub3")]
+        [Button]
+        private void TestButtonWithParameter3(TestClass testClass)
         {
-            if (array == null)
-            {
-                Debug.LogError(nameof(TestButtonWithParameter3) + ": " + "null");
-                return;
-            }
-            Debug.LogError(nameof(TestButtonWithParameter3) + ": " + string.Join(",", array));
+            Debug.LogError(testClass.intValue, testClass.goValue);
         }
-        
-        [Foldout("Foldout C")]
-        [Button(null, new []{4,5,6})]
-        private void TestButtonWithParameter4(params int[] array)
-        {
-            if (array == null)
-            {
-                Debug.LogError(nameof(TestButtonWithParameter4) + ": " + "null");
-                return;
-            }
-            Debug.LogError(nameof(TestButtonWithParameter4) + ": " + string.Join(",", array));
-        }
-#endif
     }
 }
