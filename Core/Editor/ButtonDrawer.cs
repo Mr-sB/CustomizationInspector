@@ -232,5 +232,12 @@ namespace CustomizationInspector.Editor
 			}
 			button.Draw(targets);
 		}
+		
+		public void SaveExpand()
+		{
+			foreach (var pair in buttonCache)
+				foreach (var obj in targets)
+					FieldInspector.SaveFoldoutExpand(FieldInspector.GetFoldoutSaveKey(pair.Value.Name, obj), pair.Value.Expand);
+		}
     }
 }

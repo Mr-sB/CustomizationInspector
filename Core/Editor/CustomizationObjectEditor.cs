@@ -12,6 +12,8 @@ namespace CustomizationInspector.Editor
 
 		private void OnEnable()
 		{
+			if (!target)
+				return;
 			foldoutDrawer = new FoldoutDrawer(serializedObject, targets);
 			buttonDrawer = new ButtonDrawer(serializedObject, targets);
 			buttonDrawer.SetFoldoutDrawer(foldoutDrawer);
@@ -20,6 +22,7 @@ namespace CustomizationInspector.Editor
 		void OnDisable()
 		{
 			foldoutDrawer?.SaveExpand();
+			buttonDrawer?.SaveExpand();
 		}
 
 		public override void OnInspectorGUI()
