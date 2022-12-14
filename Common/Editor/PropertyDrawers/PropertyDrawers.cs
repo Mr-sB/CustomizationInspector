@@ -145,6 +145,8 @@ namespace CustomizationInspector.Editor
 	[CustomPropertyDrawer(typeof(ValueDropdownAttribute))]
 	internal class ValueDropdownDrawer : PropertyDrawer
 	{
+		protected const int ErrorBoxHeight = 24;
+		protected const int ErrorBoxSpace = 2;
 		protected BindingFlags mBindingFlags = BindingFlags.Instance | BindingFlags.NonPublic |
 				BindingFlags.Public | BindingFlags.Static;
 		protected static MemberTypes mMemberTypes = MemberTypes.Field | MemberTypes.Property | MemberTypes.Method;
@@ -159,7 +161,10 @@ namespace CustomizationInspector.Editor
 			IList targetValue = GetTargetList(property);
 			if (targetValue == null)
 			{
-				Debug.LogError(string.Format("{0}使用出错!", attribute.GetType().ToString()), target);
+				Rect errorBoxPosition = EditorGUI.IndentedRect(new Rect(position));
+				errorBoxPosition.height = ErrorBoxHeight;
+				EditorGUI.HelpBox(errorBoxPosition, string.Format("{0}使用出错!", attribute.GetType().Name), UnityEditor.MessageType.Error);
+				position.yMin += ErrorBoxHeight + ErrorBoxSpace;
 				EditorGUI.PropertyField(position, property, label, true);
 				return;
 			}
@@ -206,7 +211,7 @@ namespace CustomizationInspector.Editor
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
 		{
 			if (GetTargetList(property) == null)
-				return EditorGUI.GetPropertyHeight(property);
+				return EditorGUI.GetPropertyHeight(property) + ErrorBoxHeight + ErrorBoxSpace;
 			return EditorGUIUtility.singleLineHeight;
 		}
 

@@ -29,24 +29,17 @@ namespace CustomizationInspector.Editor
 			serializedObject.UpdateIfRequiredOrScript();
 			SerializedProperty iterator = serializedObject.GetIterator();
 			
-			//m_Script property
-			bool moveNextSuccess = iterator.NextVisible(true);
-			if (moveNextSuccess)
-				using (new EditorGUI.DisabledScope(true))
-					EditorGUILayout.PropertyField(iterator, true);
-
-			//Foldout
-			foldoutDrawer.Draw();
-
-			//Remain property
-			if (moveNextSuccess)
+			foldoutDrawer.BeginManualDraw();
+			for (bool enterChildren = true; iterator.NextVisible(enterChildren); enterChildren = false)
 			{
-				while (iterator.NextVisible(false))
+				using (new EditorGUI.DisabledScope("m_Script" == iterator.propertyPath))
 				{
-					if (!foldoutDrawer.IsFoldout(iterator))
+					if (!foldoutDrawer.IsDrawn(iterator) && !foldoutDrawer.DrawFoldout(iterator))
 						EditorGUILayout.PropertyField(iterator, true);
 				}
 			}
+
+			foldoutDrawer.DrawRemainFoldout();
 
 			serializedObject.ApplyModifiedProperties();
 			EditorGUI.EndChangeCheck();

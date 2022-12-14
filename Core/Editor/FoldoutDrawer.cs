@@ -17,16 +17,40 @@ namespace CustomizationInspector.Editor
             public readonly List<string> PropertiesPath;
             public readonly List<MethodInfo> MethodInfos;
             public readonly List<FoldoutInfo> Children;
-            public bool Expanded;
+            public readonly FoldoutInfo Parent;
+            public bool Expand;
 
-            public FoldoutInfo(string groupName, string showName, bool expanded)
+            public FoldoutInfo Root
+            {
+	            get
+	            {
+		            var root = this;
+		            while (root.Parent != null)
+			            root = root.Parent;
+		            return root;
+	            }
+            }
+            
+            public bool ExpandInInspector
+            {
+	            get
+	            {
+		            var foldoutInfo = this;
+		            while (foldoutInfo.Expand && foldoutInfo.Parent != null)
+			            foldoutInfo = foldoutInfo.Parent;
+		            return foldoutInfo.Expand;
+	            }
+            }
+
+            public FoldoutInfo(string groupName, string showName, bool expand, FoldoutInfo parent)
             {
                 GroupName = groupName;
                 ShowName = showName;
                 PropertiesPath = new List<string>();
                 MethodInfos = new List<MethodInfo>();
                 Children = new List<FoldoutInfo>();
-                Expanded = expanded;
+                Expand = expand;
+                Parent = parent;
             }
         }
 
@@ -35,16 +59,20 @@ namespace CustomizationInspector.Editor
         
         public DrawMethodEventHandler DrawMethod;
         
-        private HashSet<string> foldoutMembers;
-        private Dictionary<string, FoldoutInfo> foldoutCache;
+        private Dictionary<string, string> foldoutMembers; //key: memberName  value: root groupName
+        private Dictionary<string, FoldoutInfo> foldoutCache; //key: groupName  value: foldoutInfo
         private List<FoldoutInfo> foldoutRoots;
+        private HashSet<string> drawnFoldoutRoots;
+        private HashSet<string> drawnMembers;
 
         public FoldoutDrawer(SerializedObject serializedObject, Object[] targets) : base(serializedObject, targets)
         {
-	        foldoutMembers = new HashSet<string>();
+	        foldoutMembers = new Dictionary<string, string>();
 	        foldoutCache = new Dictionary<string, FoldoutInfo>();
 	        foldoutRoots = new List<FoldoutInfo>();
 	        Setup();
+	        drawnFoldoutRoots = new HashSet<string>(foldoutRoots.Count);
+	        drawnMembers = new HashSet<string>(foldoutMembers.Count);
         }
 
         public void SetDrawMethodHandler(DrawMethodEventHandler handler)
@@ -52,10 +80,44 @@ namespace CustomizationInspector.Editor
 	        DrawMethod = handler;
         }
         
+        /// <summary>
+        /// Draw all foldout
+        /// </summary>
         public override void Draw()
         {
+	        BeginManualDraw();
 	        foreach (var foldoutInfo in foldoutRoots)
-		        DrawFoldout(foldoutInfo, true);
+		        DrawFoldout(foldoutInfo);
+        }
+
+        /// <summary>
+        /// Call this method before call DrawFoldout and DrawRemainFoldout
+        /// </summary>
+        public void BeginManualDraw()
+        {
+	        drawnFoldoutRoots.Clear();
+	        drawnMembers.Clear();
+        }
+        
+        /// <summary>
+        /// Draw a foldout group. You can check is the serializedProperty drawn by call IsDrawn when you don not want draw duplication.
+        /// </summary>
+        /// <param name="serializedProperty"></param>
+        /// <returns>success</returns>
+        public bool DrawFoldout(SerializedProperty serializedProperty)
+        {
+	        if (!TryGetGroupName(serializedProperty, out var rootGroupName)
+	            || !TryGetFoldoutInfo(rootGroupName, out var foldoutInfo))
+		        return false;
+	        DrawFoldout(foldoutInfo);
+	        return true;
+        }
+        
+        public void DrawRemainFoldout()
+        {
+	        foreach (var foldoutInfo in foldoutRoots)
+		        if(!IsDrawn(foldoutInfo))
+			        DrawFoldout(foldoutInfo);
         }
         
         private void Setup()
@@ -71,7 +133,7 @@ namespace CustomizationInspector.Editor
 					if (foldoutAttribute == null) continue;
 					var foldoutInfo = GetOrCreateFoldoutInfo(foldoutAttribute.GroupName);
 					foldoutInfo.PropertiesPath.Add(iterator.propertyPath);
-					AddFoldoutMember(iterator);
+					AddFoldoutMember(iterator, foldoutInfo.Root.GroupName);
 				}
 				catch (Exception e)
 				{
@@ -96,7 +158,7 @@ namespace CustomizationInspector.Editor
 				
 				var foldoutInfo = GetOrCreateFoldoutInfo(foldoutAttribute.GroupName);
 				foldoutInfo.MethodInfos.Add(methodInfo);
-				AddFoldoutMember(methodInfo);
+				AddFoldoutMember(methodInfo, foldoutInfo.Root.GroupName);
 			}
 		}
 
@@ -113,14 +175,29 @@ namespace CustomizationInspector.Editor
 	        return foldoutInfo;
         }
 
+        private bool TryGetGroupName(SerializedProperty serializedProperty, out string rootGroupName)
+        {
+	        return foldoutMembers.TryGetValue(serializedProperty.propertyPath, out rootGroupName);
+        }
+        
+        private bool TryGetGroupName(MethodInfo methodInfo, out string rootGroupName)
+        {
+	        return foldoutMembers.TryGetValue(GetFoldoutMethodMemberKey(methodInfo), out rootGroupName);
+        }
+        
+        private bool TryGetGroupName(string memberName, out string rootGroupName)
+        {
+	        return foldoutMembers.TryGetValue(memberName, out rootGroupName);
+        }
+        
         private bool TryGetFoldoutInfo(string groupName, out FoldoutInfo foldoutInfo)
         {
 	        return foldoutCache.TryGetValue(groupName, out foldoutInfo);
         }
 
-        private FoldoutInfo CreateFoldoutInfo(string groupName, string showName)
+        private FoldoutInfo CreateFoldoutInfo(string groupName, string showName, FoldoutInfo parent)
         {
-	        FoldoutInfo foldoutInfo = new FoldoutInfo(groupName, showName, FieldInspector.LoadFoldoutExpand(FieldInspector.GetFoldoutSaveKey(groupName, target)));
+	        FoldoutInfo foldoutInfo = new FoldoutInfo(groupName, showName, FieldInspector.LoadFoldoutExpand(FieldInspector.GetFoldoutSaveKey(groupName, target)), parent);
 	        foldoutCache.Add(groupName, foldoutInfo);
 	        return foldoutInfo;
         }
@@ -140,7 +217,7 @@ namespace CustomizationInspector.Editor
 		        if (!TryGetFoldoutInfo(groupName, out var child))
 		        {
 			        create = true;
-			        child = CreateFoldoutInfo(groupName, names[i]);
+			        child = CreateFoldoutInfo(groupName, names[i], parent);
 		        }
 
 		        if (create)
@@ -154,57 +231,116 @@ namespace CustomizationInspector.Editor
 	        }
         }
 
-        private void DrawFoldout(FoldoutInfo foldoutInfo, bool parentExpand)
+        private void DrawFoldout(FoldoutInfo foldoutInfo)
         {
-	        if (!parentExpand) return;
-	        //Draw self
-	        foldoutInfo.Expanded = FieldInspector.DrawFoldout(foldoutInfo.Expanded, foldoutInfo.ShowName, target);
-	        EditorGUI.indentLevel++;
+	        //Add to drawn set
+	        if (foldoutInfo.Parent == null && !drawnFoldoutRoots.Contains(foldoutInfo.GroupName))
+		        drawnFoldoutRoots.Add(foldoutInfo.GroupName);
+	        
 	        foreach (var path in foldoutInfo.PropertiesPath)
-	        {
-		        if (foldoutInfo.Expanded)
-			        EditorGUILayout.PropertyField(serializedObject.FindProperty(path), true);
-	        }
-
+		        AddDrawnMember(path);
 	        if (DrawMethod != null)
 	        {
 		        foreach (var methodInfo in foldoutInfo.MethodInfos)
-		        {
-			        if (foldoutInfo.Expanded)
-				        DrawMethod(methodInfo, targets);
-		        }
+			        AddDrawnMember(methodInfo);
 	        }
+
+	        if (foldoutInfo.Parent == null || foldoutInfo.Parent.ExpandInInspector)
+	        {
+		        //Draw self
+		        foldoutInfo.Expand = FieldInspector.DrawFoldout(foldoutInfo.Expand, foldoutInfo.ShowName, target);
+	        }
+			//Do not draw when not expandInInspector
+			if (foldoutInfo.ExpandInInspector)
+			{
+				EditorGUI.indentLevel++;
+				foreach (var path in foldoutInfo.PropertiesPath)
+				{
+					if (foldoutInfo.Expand)
+						EditorGUILayout.PropertyField(serializedObject.FindProperty(path), true);
+				}
+
+				if (DrawMethod != null)
+				{
+					foreach (var methodInfo in foldoutInfo.MethodInfos)
+					{
+						if (foldoutInfo.Expand)
+							DrawMethod(methodInfo, targets);
+					}
+				}
+			}
+	        
 	        //Draw children
 	        foreach (var child in foldoutInfo.Children)
-		        DrawFoldout(child, foldoutInfo.Expanded);
-	        EditorGUI.indentLevel--;
+		        DrawFoldout(child);
+	        
+	        if (foldoutInfo.ExpandInInspector)
+		        EditorGUI.indentLevel--;
         }
 
-        private void AddFoldoutMember(SerializedProperty serializedProperty)
+        private void AddFoldoutMember(SerializedProperty serializedProperty, string rootGroupName)
         {
-	        foldoutMembers.Add(serializedProperty.propertyPath);
+	        foldoutMembers.Add(serializedProperty.propertyPath, rootGroupName);
         }
         
-        private void AddFoldoutMember(MethodInfo methodInfo)
+        private void AddFoldoutMember(MethodInfo methodInfo, string rootGroupName)
         {
-	        foldoutMembers.Add(GetFoldoutMethodMemberKey(methodInfo));
+	        foldoutMembers.Add(GetFoldoutMethodMemberKey(methodInfo), rootGroupName);
+        }
+
+        private void AddDrawnFoldoutRoot(FoldoutInfo foldoutInfo)
+        {
+	        var root = foldoutInfo.Root;
+	        if (!drawnFoldoutRoots.Contains(root.GroupName))
+		        drawnFoldoutRoots.Add(root.GroupName);
+        }
+        
+        private void AddDrawnMember(SerializedProperty serializedProperty)
+        {
+	        AddDrawnMember(serializedProperty.propertyPath);
+        }
+        
+        private void AddDrawnMember(MethodInfo methodInfo)
+        {
+	        AddDrawnMember(GetFoldoutMethodMemberKey(methodInfo));
+        }
+        
+        private void AddDrawnMember(string member)
+        {
+	        if (!drawnMembers.Contains(member))
+		        drawnMembers.Add(member);
         }
         
         public bool IsFoldout(SerializedProperty property)
         {
-	        return foldoutMembers.Contains(property.propertyPath);
+	        return foldoutMembers.ContainsKey(property.propertyPath);
         }
         
         public bool IsFoldout(MethodInfo methodInfo)
         {
-	        return foldoutMembers.Contains(GetFoldoutMethodMemberKey(methodInfo));
+	        return foldoutMembers.ContainsKey(GetFoldoutMethodMemberKey(methodInfo));
+        }
+
+        private bool IsDrawn(FoldoutInfo foldoutInfo)
+        {
+	        return drawnFoldoutRoots.Contains(foldoutInfo.Root.GroupName);
+        }
+        
+        public bool IsDrawn(SerializedProperty property)
+        {
+	        return drawnMembers.Contains(property.propertyPath);
+        }
+        
+        public bool IsDrawn(MethodInfo methodInfo)
+        {
+	        return drawnMembers.Contains(GetFoldoutMethodMemberKey(methodInfo));
         }
         
         public void SaveExpand()
         {
 	        foreach (var foldoutInfo in foldoutCache.Values)
 		        foreach (var obj in targets)
-			        FieldInspector.SaveFoldoutExpand(FieldInspector.GetFoldoutSaveKey(foldoutInfo.GroupName, obj), foldoutInfo.Expanded);
+			        FieldInspector.SaveFoldoutExpand(FieldInspector.GetFoldoutSaveKey(foldoutInfo.GroupName, obj), foldoutInfo.Expand);
         }
         
         private static string GetFoldoutMethodMemberKey(MethodInfo methodInfo)
