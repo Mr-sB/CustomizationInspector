@@ -64,7 +64,7 @@ namespace CustomizationInspector.Editor
 			    if (parameterInfos.Length == 0)
 			    {
 				    Parameters = null;
-				    Content = new GUIContent(name ?? methodInfo.Name);
+				    Content = new GUIContent(Name);
 			    }
 			    else
 			    {

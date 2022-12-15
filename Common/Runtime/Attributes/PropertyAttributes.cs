@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using UnityEngine;
 namespace CustomizationInspector.Runtime
 {	
@@ -11,6 +12,7 @@ namespace CustomizationInspector.Runtime
 	}
 
 	[AttributeUsage(AttributeTargets.Method, Inherited = true, AllowMultiple = false)]
+	[Conditional("UNITY_EDITOR")]
 	public class ButtonAttribute : Attribute
 	{
 		public readonly string ShowName;
@@ -32,6 +34,7 @@ namespace CustomizationInspector.Runtime
 	}
 
 	[AttributeUsage(AttributeTargets.Field, Inherited = true, AllowMultiple = false)]
+	[Conditional("UNITY_EDITOR")]
 	public class HideIfAttribute : PropertyAttribute
 	{
 
@@ -45,6 +48,7 @@ namespace CustomizationInspector.Runtime
 	}
 
 	[AttributeUsage(AttributeTargets.Field, Inherited = true, AllowMultiple = false)]
+	[Conditional("UNITY_EDITOR")]
 	public class ShowIfAttribute : PropertyAttribute
 	{
 		public readonly string MemberName;
@@ -57,10 +61,12 @@ namespace CustomizationInspector.Runtime
 	}
 
 	[AttributeUsage(AttributeTargets.Field, Inherited = true, AllowMultiple = false)]
+	[Conditional("UNITY_EDITOR")]
 	public class ReadOnlyAttribute : PropertyAttribute
 	{ }
 
 	[AttributeUsage(AttributeTargets.Field, Inherited = true, AllowMultiple = false)]
+	[Conditional("UNITY_EDITOR")]
 	public class ValueDropdownAttribute : PropertyAttribute
 	{
 
@@ -74,6 +80,7 @@ namespace CustomizationInspector.Runtime
 	}
 	
 	[AttributeUsage(AttributeTargets.Field, Inherited = true, AllowMultiple = true)]
+	[Conditional("UNITY_EDITOR")]
 	public class InfoBoxAttribute : PropertyAttribute
 	{		
 		public readonly string Description;
@@ -88,6 +95,7 @@ namespace CustomizationInspector.Runtime
 	}
 	
 	[AttributeUsage(AttributeTargets.Field, Inherited = true, AllowMultiple = false)]
+	[Conditional("UNITY_EDITOR")]
 	public class RenameAttribute : PropertyAttribute
 	{
 		public readonly string Rename;
@@ -120,6 +128,7 @@ namespace CustomizationInspector.Runtime
 	/// </code>
 	/// </example>
 	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Method, Inherited = true, AllowMultiple = false)]
+	[Conditional("UNITY_EDITOR")]
 	public class FoldoutAttribute : Attribute
 	{
 		public readonly string GroupName;
