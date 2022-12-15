@@ -23,6 +23,13 @@ namespace CustomizationInspector.Editor
 			    Type = type;
 			    Value = value;
 			    content = new GUIContent(Name);
+			    if (value != null)
+			    {
+				    var valueType = value.GetType();
+				    //Change type to value's type
+				    if (Type != valueType && Type.IsAssignableFrom(valueType))
+					    Type = valueType;
+			    }
 		    }
 
 		    public Parameter(ParameterInfo parameterInfo, object value) : this(parameterInfo.Name, parameterInfo.ParameterType, value)

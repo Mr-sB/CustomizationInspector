@@ -1,6 +1,7 @@
 ﻿using System;
 using CustomizationInspector.Runtime;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace CustomizationInspector.Example
 {
@@ -73,6 +74,12 @@ namespace CustomizationInspector.Example
         private void TestButtonWithParameter3(TestClass testClass)
         {
             Debug.LogError(testClass.intValue, testClass.goValue);
+        }
+        
+        [Button]
+        private void TestButtonWithParameter4([System.ComponentModel.DefaultValue("test")]object objectValue, Object go)
+        {
+            Debug.LogError(objectValue, go);
         }
     }
 }

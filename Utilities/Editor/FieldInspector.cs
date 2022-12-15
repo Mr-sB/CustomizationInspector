@@ -22,6 +22,16 @@ namespace CustomizationInspector.Editor
 		private static GUIContent TempContent(string text)
 		{
 			tmpContent.text = text;
+			tmpContent.tooltip = null;
+			tmpContent.image = null;
+			return tmpContent;
+		}
+		
+		private static GUIContent TempContent(string text, string toolTip)
+		{
+			tmpContent.text = text;
+			tmpContent.tooltip = toolTip;
+			tmpContent.image = null;
 			return tmpContent;
 		}
 
@@ -246,17 +256,8 @@ namespace CustomizationInspector.Editor
 						if (content == null)
 						{
 							string name = fields[j].Name;
-							TooltipAttribute[] array;
-							if ((array =
-								    fields[j].GetCustomAttributes(typeof(TooltipAttribute), false) as TooltipAttribute
-									    [])?.Length > 0)
-							{
-								content = new GUIContent(EditorUtil.SplitCamelCase(name), array[0].tooltip);
-							}
-							else
-							{
-								content = new GUIContent(EditorUtil.SplitCamelCase(name));
-							}
+							TooltipAttribute tooltipAttribute = fields[j].GetCustomAttribute<TooltipAttribute>(false);
+							content = TempContent(EditorUtil.SplitCamelCase(name), tooltipAttribute?.tooltip);
 						}
 
 						EditorGUI.BeginChangeCheck();
@@ -717,12 +718,12 @@ namespace CustomizationInspector.Editor
 			{
 				if (typeof(Delegate).IsAssignableFrom(fieldType))
 				{
-					return null;
+					return value;
 				}
 
+				GUILayout.BeginVertical();
 				try
 				{
-					GUILayout.BeginVertical();
 					if (value == null)
 					{
 						if (fieldType.IsGenericType && fieldType.GetGenericTypeDefinition() == typeof(Nullable<>))
@@ -739,19 +740,16 @@ namespace CustomizationInspector.Editor
 						value = DrawFields(value, null, target);
 						EditorGUI.indentLevel--;
 					}
-					GUILayout.EndVertical();
-					object result = value;
-					return result;
 				}
-				catch (Exception)
+				finally
 				{
 					GUILayout.EndVertical();
-					return null;
 				}
+				return value;
 			}
 
 			EditorGUILayout.LabelField("Unsupported Type: " + fieldType);
-			return null;
+			return value;
 		}
 
 		private static LayerMask DrawLayerMaskLayout(GUIContent content, LayerMask layerMask)
