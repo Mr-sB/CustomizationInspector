@@ -22,6 +22,15 @@ namespace CustomizationInspector.Example
         [Foldout("Foldout A")]
         [HideIf(nameof(Hide))] //支持值为bool的field、property、method
         public Vector3 HideField;
+        
+        [Foldout("Foldout A")]
+        [ReadOnly]
+        [FilePath]
+        public string filePath;
+        
+        [Foldout("Foldout A")]
+        [FolderPath(PathLocation.AssetsFolder)]
+        public string folderPath;
 
         [Foldout("Foldout A/Sub1")]
         [Rename("是否显示")]
@@ -74,6 +83,12 @@ namespace CustomizationInspector.Example
         private void TestButtonWithParameter3(TestClass testClass)
         {
             Debug.LogError(testClass.intValue, testClass.goValue);
+        }
+        
+        [Button]
+        private void TestButtonWithParameter4([System.ComponentModel.DefaultValue("test")]object objectValue, Object go)
+        {
+            Debug.LogError(objectValue, go);
         }
     }
 }
