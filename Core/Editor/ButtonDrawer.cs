@@ -162,18 +162,19 @@ namespace CustomizationInspector.Editor
 				    if (expand.Value)
 				    {
 					    Rect verticalRect = EditorGUILayout.BeginVertical();
+					    EditorGUILayout.Space(1);
 					    if (Event.current.type == EventType.Repaint)
 					    {
 						    EditorGUI.indentLevel--;
 						    Rect backgroundPosition = EditorGUI.IndentedRect(verticalRect);
 						    EditorGUI.indentLevel++;
-						    backgroundPosition.height += 2;
 						    BackgroundStyle.Draw(backgroundPosition, false, false, false, false);
 					    }
 					    EditorGUI.indentLevel++;
 					    foreach (var parameter in Parameters)
 						    parameter.Draw(targets[0]);
 					    EditorGUI.indentLevel--;
+					    EditorGUILayout.Space(2);
 					    EditorGUILayout.EndVertical();
 				    }
 			    }
