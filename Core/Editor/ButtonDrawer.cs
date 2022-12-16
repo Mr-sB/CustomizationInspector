@@ -45,6 +45,7 @@ namespace CustomizationInspector.Editor
 	    private class Button
 	    {
 		    public static readonly GUIStyle HeaderStyle = "RL Header";
+		    public static readonly GUIStyle BackgroundStyle = "RL Background";
 		    public const int InvokeButtonWidth = 50;
 		    public const int InvokeButtonHeight = 19;
 		    public const int InvokeButtonSpace = 2;
@@ -160,18 +161,21 @@ namespace CustomizationInspector.Editor
 
 				    if (expand.Value)
 				    {
+					    Rect verticalRect = EditorGUILayout.BeginVertical();
+					    if (Event.current.type == EventType.Repaint)
+					    {
+						    EditorGUI.indentLevel--;
+						    Rect backgroundPosition = EditorGUI.IndentedRect(verticalRect);
+						    EditorGUI.indentLevel++;
+						    backgroundPosition.height += 2;
+						    BackgroundStyle.Draw(backgroundPosition, false, false, false, false);
+					    }
 					    EditorGUI.indentLevel++;
 					    foreach (var parameter in Parameters)
 						    parameter.Draw(targets[0]);
 					    EditorGUI.indentLevel--;
+					    EditorGUILayout.EndVertical();
 				    }
-				    
-				    // Rect lastRect = GUILayoutUtility.GetLastRect();
-				    // Rect backgroundPosition = new Rect(position);
-				    // backgroundPosition.y += backgroundPosition.height;
-				    // backgroundPosition.yMax = lastRect.yMax;
-				    // if (Event.current.type == EventType.Repaint)
-					   //  ((GUIStyle) "RL Background").Draw(backgroundPosition, false, false, false, false);
 			    }
 		    }
 	    }
