@@ -19,7 +19,7 @@ namespace CustomizationInspector.Editor
 		    
 		    public Parameter(string name, Type type, object value)
 		    {
-			    Name = name;
+			    Name = EditorUtil.SplitCamelCase(name);
 			    Type = type;
 			    Value = value;
 			    content = new GUIContent(Name);
@@ -60,7 +60,7 @@ namespace CustomizationInspector.Editor
 		    public Button(MethodInfo methodInfo, string name)
 		    {
 			    MethodInfo = methodInfo;
-			    Name = name ?? methodInfo.Name;
+			    Name = name ?? EditorUtil.SplitCamelCase(methodInfo.Name);
 			    var parameterInfos = methodInfo.GetParameters();
 			    if (parameterInfos.Length == 0)
 			    {
