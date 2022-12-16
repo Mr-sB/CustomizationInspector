@@ -1,6 +1,7 @@
 ﻿using System;
 using CustomizationInspector.Runtime;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace CustomizationInspector.Example
 {
