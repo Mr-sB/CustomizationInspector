@@ -3,6 +3,7 @@ using System.Collections;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace CustomizationInspector.Editor
 {
@@ -15,7 +16,9 @@ namespace CustomizationInspector.Editor
 		{
 			//从最外层的property.serializedObject.targetObject(继承自UnityEngine.Object)的对象一层一层的找到目前需要绘制的对象
 			string[] array = property.propertyPath.Replace("Array.data", "*Array").Split('.');
-			object obj = property.serializedObject.targetObject;
+			Object targetObject = property.serializedObject.targetObject;
+			if (!targetObject) return null;
+			object obj = targetObject;
 			for (int i = 0; i < array.Length; i++)
 			{
 				if (!array[i].StartsWith("*Array"))
@@ -39,7 +42,9 @@ namespace CustomizationInspector.Editor
 		{
 			//从最外层的property.serializedObject.targetObject(继承自UnityEngine.Object)的对象一层一层的找到目前需要绘制的对象
 			string[] array = property.propertyPath.Replace("Array.data", "*Array").Split('.');
-			object obj = property.serializedObject.targetObject;
+			Object targetObject = property.serializedObject.targetObject;
+			if (!targetObject) return null;
+			object obj = targetObject;
 			FieldInfo fieldInfo = null;
 			for (int i = 0; i < array.Length; i++)
 			{
@@ -64,7 +69,9 @@ namespace CustomizationInspector.Editor
 		{
 			//从最外层的property.serializedObject.targetObject(继承自UnityEngine.Object)的对象一层一层的找到目前需要绘制的对象
 			string[] array = property.propertyPath.Replace("Array.data", "*Array").Split('.');
-			object obj = property.serializedObject.targetObject;
+			Object targetObject = property.serializedObject.targetObject;
+			if (!targetObject) return null;
+			object obj = targetObject;
 			for (int i = 0; i < array.Length - 1; i++)
 			{
 				if (!array[i].StartsWith("*Array"))

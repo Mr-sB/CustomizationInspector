@@ -72,7 +72,7 @@ namespace CustomizationInspector.Editor
         private HashSet<string> drawnFoldoutRoots;
         private HashSet<string> drawnMembers;
 
-        public FoldoutDrawer(SerializedObject serializedObject, Object[] targets, FoldoutStyle style = FoldoutStyle.Header) : base(serializedObject, targets)
+        public FoldoutDrawer(SerializedObject serializedObject, Object target, Object[] targets, FoldoutStyle style = FoldoutStyle.Header) : base(serializedObject, target, targets)
         {
 	        Style = style;
 	        foldoutMembers = new Dictionary<string, string>();

@@ -15,10 +15,10 @@ namespace CustomizationInspector.Editor
         protected Object[] targets;
         protected Type targetType;
         
-        public Drawer(SerializedObject serializedObject, Object[] targets)
+        public Drawer(SerializedObject serializedObject, Object target, Object[] targets)
         {
             this.serializedObject = serializedObject;
-            target = serializedObject.targetObject;
+            this.target = target;
             this.targets = targets;
             targetType = target.GetType();
         }

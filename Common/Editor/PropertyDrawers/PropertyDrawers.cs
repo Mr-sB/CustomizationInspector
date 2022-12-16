@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.IO;
 using System.Reflection;
 using CustomizationInspector.Runtime;
 using UnityEditor;
@@ -275,4 +276,106 @@ namespace CustomizationInspector.Editor
 	        return EditorGUI.GetPropertyHeight(property);
         }
     }
+
+	internal class PathDrawer : PropertyDrawer
+	{
+		public const int BrowseButtonWidth = 18;
+		public const int OpenButtonWidth = 18;
+		public const int Space = 2;
+		
+		private static readonly GUIContent browseContent = EditorGUIUtility.IconContent("d_Folder Icon");
+		private static readonly GUIContent openContent = EditorGUIUtility.IconContent("d_FolderOpened Icon");
+		private static readonly GUIStyle buttonStyle = GUI.skin.FindStyle("ColorPickerBox") ??
+		                                               EditorGUIUtility.GetBuiltinSkin(EditorSkin.Inspector).FindStyle("ColorPickerBox") ??
+		                                               GUIStyle.none;
+
+		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+		{
+			if (fieldInfo.FieldType != typeof(string))
+			{
+				EditorGUI.PropertyField(position, property, label);
+				return;
+			}
+			DrawPath(position, property, label);
+		}
+
+		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+		{
+			return EditorGUI.GetPropertyHeight(property);
+		}
+		
+		public void DrawPath(Rect position, SerializedProperty property, GUIContent label)
+		{
+			if (attribute is not PathAttribute pathAttribute) return;
+			Rect propertyPosition = new Rect(position);
+			if (pathAttribute.Browse)
+				propertyPosition.width -= Space + BrowseButtonWidth;
+			if (pathAttribute.Open)
+				propertyPosition.width -= Space + OpenButtonWidth;
+			EditorGUI.PropertyField(propertyPosition, property, label, true);
+			if (pathAttribute.Draggable)
+			{
+				if (Event.current.type == EventType.DragUpdated && propertyPosition.Contains(Event.current.mousePosition))
+					DragAndDrop.visualMode = DragAndDropVisualMode.Link;
+				else if (Event.current.type == EventType.DragPerform && DragAndDrop.paths != null && DragAndDrop.paths.Length > 0)
+				{
+					if (propertyPosition.Contains(Event.current.mousePosition) && DragAndDrop.paths[0] != null)
+					{
+						string path = DragAndDrop.paths[0];
+						if (!pathAttribute.IsFile && File.Exists(path))
+							path = Path.GetDirectoryName(path);
+						property.stringValue = pathAttribute.GetRelativePath(path);
+						Event.current.Use();
+					}
+				}
+			}
+			
+			if (pathAttribute.Browse)
+			{
+				Rect browsePosition = new Rect(position);
+				if (pathAttribute.Open)
+				{
+					browsePosition.width = BrowseButtonWidth;
+					browsePosition.x += propertyPosition.width + Space;
+				}
+				else
+					browsePosition.xMin = browsePosition.xMax - OpenButtonWidth;
+				//Avoid ReadOnlyAttribute make button can not click.
+				bool enabled = GUI.enabled;
+				GUI.enabled = true;
+				if (GUI.Button(browsePosition, browseContent, buttonStyle))
+				{
+					string path;
+					if (pathAttribute.IsFile)
+						path = EditorUtility.OpenFilePanel(label.text, pathAttribute.GetAbsolutePath(property.stringValue), "");
+					else
+						path = EditorUtility.OpenFolderPanel(label.text, pathAttribute.GetAbsolutePath(property.stringValue), "");
+					if (!string.IsNullOrEmpty(path))
+						property.stringValue = pathAttribute.GetRelativePath(path);
+				}
+				GUI.enabled = enabled;
+			}
+			if (pathAttribute.Open)
+			{
+				Rect openPosition = new Rect(position);
+				openPosition.xMin = openPosition.xMax - OpenButtonWidth;
+				//Avoid ReadOnlyAttribute make button can not click.
+				bool enabled = GUI.enabled;
+				GUI.enabled = true;
+				if (GUI.Button(openPosition, openContent, buttonStyle))
+					EditorUtility.RevealInFinder(pathAttribute.GetAbsolutePath(property.stringValue));
+				GUI.enabled = enabled;
+			}
+		}
+	}
+
+	[CustomPropertyDrawer(typeof(Runtime.FilePathAttribute))]
+	internal class FilePathDrawer : PathDrawer
+	{
+	}
+	
+	[CustomPropertyDrawer(typeof(Runtime.FolderPathAttribute))]
+	internal class FolderPathDrawer : PathDrawer
+	{
+	}
 }

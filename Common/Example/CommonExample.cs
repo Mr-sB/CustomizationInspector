@@ -22,6 +22,15 @@ namespace CustomizationInspector.Example
         [Foldout("Foldout A")]
         [HideIf(nameof(Hide))] //支持值为bool的field、property、method
         public Vector3 HideField;
+        
+        [Foldout("Foldout A")]
+        [ReadOnly]
+        [FilePath]
+        public string filePath;
+        
+        [Foldout("Foldout A")]
+        [FolderPath(PathLocation.AssetsFolder)]
+        public string folderPath;
 
         [Foldout("Foldout A/Sub1")]
         [Rename("是否显示")]

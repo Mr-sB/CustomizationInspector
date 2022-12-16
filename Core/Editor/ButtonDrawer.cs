@@ -191,7 +191,7 @@ namespace CustomizationInspector.Editor
 			return tmpContent;
 		}
 		
-	    public ButtonDrawer(SerializedObject serializedObject, Object[] targets) : base(serializedObject, targets)
+	    public ButtonDrawer(SerializedObject serializedObject, Object target, Object[] targets) : base(serializedObject, target, targets)
 	    {
 	        methodInfos = targetType.GetMethods(BindingFlags);
 	        methodButtonAttributes = new Dictionary<MethodInfo, List<ButtonAttribute>>(methodInfos.Length);

@@ -14,8 +14,8 @@ namespace CustomizationInspector.Editor
 		{
 			if (!target)
 				return;
-			foldoutDrawer = new FoldoutDrawer(serializedObject, targets);
-			buttonDrawer = new ButtonDrawer(serializedObject, targets);
+			foldoutDrawer = new FoldoutDrawer(serializedObject, target, targets);
+			buttonDrawer = new ButtonDrawer(serializedObject, target, targets);
 			buttonDrawer.SetFoldoutDrawer(foldoutDrawer);
 		}
 		
@@ -27,6 +27,11 @@ namespace CustomizationInspector.Editor
 
 		public override void OnInspectorGUI()
 		{
+			if (!target)
+			{
+				base.OnInspectorGUI();
+				return;
+			}
 			//利用源码序列化
 			EditorGUI.BeginChangeCheck();
 			serializedObject.UpdateIfRequiredOrScript();

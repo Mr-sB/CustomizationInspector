@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using UnityEngine;
 namespace CustomizationInspector.Runtime
 {	
@@ -9,6 +10,13 @@ namespace CustomizationInspector.Runtime
 		Info,
 		Warning,
 		Error,
+	}
+	
+	public enum PathLocation
+	{
+		CustomFolder,
+		ProjectFolder,
+		AssetsFolder,
 	}
 
 	[AttributeUsage(AttributeTargets.Method, Inherited = true, AllowMultiple = false)]
@@ -135,6 +143,80 @@ namespace CustomizationInspector.Runtime
 		public FoldoutAttribute(string groupName)
 		{
 			GroupName = groupName;
+		}
+	}
+	
+	[Conditional("UNITY_EDITOR")]
+	public abstract class PathAttribute : PropertyAttribute
+	{
+		public readonly PathLocation Location;
+		public readonly string RootFolder;
+		public abstract bool IsFile { get; }
+		public bool Browse = true;
+		public bool Open = true;
+		public bool Draggable = true;
+		
+		public PathAttribute(PathLocation location = PathLocation.ProjectFolder, string rootFolder = null)
+		{
+			Location = location;
+			switch (location)
+			{
+				case PathLocation.CustomFolder:
+					RootFolder = rootFolder;
+					break;
+				case PathLocation.ProjectFolder:
+					RootFolder = Environment.CurrentDirectory;
+					break;
+				case PathLocation.AssetsFolder:
+					RootFolder = Application.dataPath;
+					break;
+			}
+		}
+		
+		public PathAttribute(string rootFolder) : this(PathLocation.CustomFolder, rootFolder)
+		{
+		}
+		
+		public string GetRelativePath(string path)
+		{
+			if (string.IsNullOrEmpty(RootFolder) || string.IsNullOrEmpty(path)) return path;
+			return Path.GetRelativePath(RootFolder, path);
+		}
+
+		public string GetAbsolutePath(string relativePath)
+		{
+			if (string.IsNullOrEmpty(RootFolder)) return relativePath;
+			return Path.GetFullPath(Path.Combine(RootFolder, relativePath ?? ""));
+		}
+	}
+	
+	[AttributeUsage(AttributeTargets.Field, Inherited = true, AllowMultiple = false)]
+	[Conditional("UNITY_EDITOR")]
+	public class FilePathAttribute : PathAttribute
+	{
+		public override bool IsFile => true;
+
+		public FilePathAttribute(PathLocation location = PathLocation.ProjectFolder, string rootFolder = null) : base(location, rootFolder)
+		{
+		}
+		
+		public FilePathAttribute(string rootFolder) : base(rootFolder)
+		{
+		}
+	}
+
+	[AttributeUsage(AttributeTargets.Field, Inherited = true, AllowMultiple = false)]
+	[Conditional("UNITY_EDITOR")]
+	public class FolderPathAttribute : PathAttribute
+	{
+		public override bool IsFile => false;
+		
+		public FolderPathAttribute(PathLocation location = PathLocation.ProjectFolder, string rootFolder = null) : base(location, rootFolder)
+		{
+		}
+		
+		public FolderPathAttribute(string rootFolder) : base(rootFolder)
+		{
 		}
 	}
 }
