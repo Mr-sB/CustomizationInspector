@@ -553,10 +553,10 @@ namespace CustomizationInspector.Editor
 
 				for (int k = 0; k < list.Count; k++)
 				{
-					GUILayout.BeginHorizontal();
+					// GUILayout.BeginHorizontal();
 					list[k] = DrawFieldLayout(TempContent("Element " + k), type, list[k], target);
-					GUILayout.Space(6f);
-					GUILayout.EndHorizontal();
+					// GUILayout.Space(6f);
+					// GUILayout.EndHorizontal();
 				}
 
 				EditorGUI.indentLevel--;
