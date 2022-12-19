@@ -27,12 +27,6 @@ Customize Unity3D inspector by attribute(such as Button, ReadOnly, HideIf etc.) 
 * SerializableDictionary
 
 ![image](Screenshots/SerializableDictionaryExample.png)
-* AnimationCurve
-
-![image](Screenshots/AnimationCurveExample.png)
 * Vector4
 
 ![image](Screenshots/Vector4Example.png)
-
-## Note
-`AnimationCurve` require [UnityExtensionUtil](https://github.com/Mr-sB/UnityExtensionUtil) module.
