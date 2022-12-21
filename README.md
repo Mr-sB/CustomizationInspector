@@ -15,7 +15,6 @@ Customize Unity3D inspector by attribute(such as Button, ReadOnly, HideIf etc.) 
   - MinMax
 * Serialize dictionary class to easy edit in inspector.
 * Redraw `Vector4` and `Vector4Int` inspector.
-* Add Copy and Paste button on `AnimationCurve` inspector.
 
 ## Effect
 * CommonAttributes
