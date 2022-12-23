@@ -8,6 +8,7 @@ Customize Unity3D inspector by attribute(such as Button, ReadOnly, HideIf etc.) 
   - HideIf
   - ShowIf
   - ReadOnly
+  - ValueDropdown
   - InfoBox
   - Button
   - FilePath
