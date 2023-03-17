@@ -14,19 +14,23 @@ Customize Unity3D inspector by attribute(such as Button, ReadOnly, HideIf etc.) 
   - FilePath
   - FolderPath
   - MinMax
+  - SerializeReferenceSelector
 * Serialize dictionary class to easy edit in inspector.
 * Redraw `Vector4` and `Vector4Int` inspector.
 
 ## Effect
 * CommonAttributes
 
-![image](Screenshots/CommonExample.png)
-* MinMax
+![image](Screenshots~/CommonExample.png)
+* SerializeReferenceSelector
 
-![image](Screenshots/MinMaxExample.png)
+![image](Screenshots~/SerializeReferenceSelectorExample.png)
 * SerializableDictionary
 
-![image](Screenshots/SerializableDictionaryExample.png)
+![image](Screenshots~/SerializableDictionaryExample.png)
+* MinMax
+
+![image](Screenshots~/MinMaxExample.png)
 * Vector4
 
-![image](Screenshots/Vector4Example.png)
+![image](Screenshots~/Vector4Example.png)

@@ -1,0 +1,16 @@
+{
+    "name": "CustomizationInspector.Example",
+    "rootNamespace": "",
+    "references": [
+        "GUID:43cc45da87b73454aaf4d367ead4ea49"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

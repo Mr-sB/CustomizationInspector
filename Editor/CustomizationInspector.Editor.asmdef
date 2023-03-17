@@ -1,0 +1,19 @@
+{
+    "name": "CustomizationInspector.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:43cc45da87b73454aaf4d367ead4ea49"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "UNITY_2019_1_OR_NEWER",
+        "UNITY_2019_3_OR_NEWER"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
