@@ -21,16 +21,16 @@ Customize Unity3D inspector by attribute(such as Button, ReadOnly, HideIf etc.) 
 ## Effect
 * CommonAttributes
 
-![image](Screenshots~/CommonExample.png)
+![image](CVS/Screenshots/CommonExample.png)
 * SerializeReferenceSelector
 
-![image](Screenshots~/SerializeReferenceSelectorExample.png)
+![image](CVS/Screenshots/SerializeReferenceSelectorExample.png)
 * SerializableDictionary
 
-![image](Screenshots~/SerializableDictionaryExample.png)
+![image](CVS/Screenshots/SerializableDictionaryExample.png)
 * MinMax
 
-![image](Screenshots~/MinMaxExample.png)
+![image](CVS/Screenshots/MinMaxExample.png)
 * Vector4
 
-![image](Screenshots~/Vector4Example.png)
+![image](CVS/Screenshots/Vector4Example.png)

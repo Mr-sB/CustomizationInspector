@@ -1,0 +1,24 @@
+{
+  "name": "com.mr-sb.customizationinspector",
+  "displayName": "Customization Inspector",
+  "version": "1.0.0",
+  "keywords": [
+    "unity",
+    "inspector",
+    "button",
+    "attribute",
+    "unity3d-editor",
+    "serializabledirection"
+  ],
+  "description": "Customize Unity3D inspector by attribute(such as Button, ReadOnly, HideIf etc.) and serializable dictionary.",
+  "repository": {
+    "url": "https://github.com/Mr-sB/CustomizationInspector.git",
+    "type": "git"
+  },
+  "samples": [
+    {
+      "displayName": "Customization Examples",
+      "path": "CVS/Example"
+    }
+  ]
+}
