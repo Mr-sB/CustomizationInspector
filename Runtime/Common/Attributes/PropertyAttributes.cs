@@ -214,4 +214,20 @@ namespace CustomizationInspector.Runtime
 		{
 		}
 	}
+	
+	[AttributeUsage(AttributeTargets.Field, Inherited = true, AllowMultiple = false)]
+	[Conditional("UNITY_EDITOR")]
+	public class LabelWidthAttribute : PropertyAttribute
+	{
+		public readonly float LabelWidth = -1;
+
+		public LabelWidthAttribute()
+		{
+		}
+		
+		public LabelWidthAttribute(float labelWidth)
+		{
+			LabelWidth = labelWidth;
+		}
+	}
 }

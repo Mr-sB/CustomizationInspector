@@ -85,7 +85,7 @@ namespace CustomizationInspector.Editor
 		{
 			bool enabled = GUI.enabled;
 			GUI.enabled = false;
-			EditorGUI.PropertyField(position, property, label);
+			EditorGUI.PropertyField(position, property, label, true);
 			GUI.enabled = enabled;
 		}
 
@@ -213,13 +213,13 @@ namespace CustomizationInspector.Editor
 			string rename = (attribute as RenameAttribute).Rename;
 			if (string.IsNullOrWhiteSpace(rename))
 			{
-				EditorGUI.PropertyField(position, property, label);
+				EditorGUI.PropertyField(position, property, label, true);
 				return;
 			}
 
 			if (renameLabel == null)
 				renameLabel = new GUIContent(label) {text = rename};
-			EditorGUI.PropertyField(position, property, renameLabel);
+			EditorGUI.PropertyField(position, property, renameLabel, true);
 		}
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
@@ -244,7 +244,7 @@ namespace CustomizationInspector.Editor
 		{
 			if (fieldInfo.FieldType != typeof(string))
 			{
-				EditorGUI.PropertyField(position, property, label);
+				EditorGUI.PropertyField(position, property, label, true);
 				return;
 			}
 			DrawPath(position, property, label);
@@ -328,5 +328,24 @@ namespace CustomizationInspector.Editor
 	[CustomPropertyDrawer(typeof(Runtime.FolderPathAttribute))]
 	internal class FolderPathDrawer : PathDrawer
 	{
+	}
+	
+	[CustomPropertyDrawer(typeof(LabelWidthAttribute))]
+	internal class LabelWidthDrawer : PropertyDrawer
+	{
+		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+		{
+			var oldLabelWidth = EditorGUIUtility.labelWidth;
+			EditorGUIUtility.labelWidth = attribute is LabelWidthAttribute labelWidthAttribute && labelWidthAttribute.LabelWidth >= 0
+				? labelWidthAttribute.LabelWidth
+				: EditorGUIUtility.labelWidth;
+			EditorGUI.PropertyField(position, property, label, true);
+			EditorGUIUtility.labelWidth = oldLabelWidth;
+		}
+
+		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+		{
+			return EditorGUI.GetPropertyHeight(property, label, true);
+		}
 	}
 }

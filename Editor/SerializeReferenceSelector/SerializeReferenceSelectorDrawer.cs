@@ -43,19 +43,12 @@ namespace CustomizationInspector.Editor
         
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 		{
-			float oldLabelWidth = EditorGUIUtility.labelWidth;
 			if (property.propertyType == SerializedPropertyType.ManagedReference)
 			{
 				Rect dropdownRect = position;
-				float xOffset = EditorGUIUtility.labelWidth;
-				float contentLabelWidth = EditorGUIUtility.labelWidth;
-				if (attribute is SerializeReferenceSelectorAttribute selectorAttribute)
-				{
-					if (selectorAttribute.XOffset >= 0)
-						xOffset = selectorAttribute.XOffset;
-					if (selectorAttribute.ContentLabelWidth >= 0)
-						contentLabelWidth = selectorAttribute.ContentLabelWidth;
-				}
+				float xOffset = attribute is SerializeReferenceSelectorAttribute selectorAttribute && selectorAttribute.XOffset >= 0
+					? selectorAttribute.XOffset
+					: EditorGUIUtility.labelWidth;
 				dropdownRect.xMin += xOffset;
 				dropdownRect.height = EditorGUIUtility.singleLineHeight;
 				
@@ -66,11 +59,9 @@ namespace CustomizationInspector.Editor
 					targetProperty = property;
 					GetTypeDropdown(property).Show(dropdownRect);
 				}
-				EditorGUIUtility.labelWidth = contentLabelWidth;
 			}
 
 			EditorGUI.PropertyField(position, property, label, true);
-			EditorGUIUtility.labelWidth = oldLabelWidth;
 		}
 
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
