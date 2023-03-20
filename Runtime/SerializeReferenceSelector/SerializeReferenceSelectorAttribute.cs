@@ -10,6 +10,7 @@ namespace CustomizationInspector.Runtime
     {
         public int MinLine = 16;
         public float XOffset = -1;
+        public float ContentLabelWidth = -1;
 
         public SerializeReferenceSelectorAttribute()
         {

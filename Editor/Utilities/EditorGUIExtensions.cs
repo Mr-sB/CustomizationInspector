@@ -1,4 +1,3 @@
-using System;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
@@ -8,14 +7,15 @@ namespace CustomizationInspector.Editor
     public static class EditorGUIExtensions
     {
         /// <summary>Creates a rect that can be grabbed and pulled</summary>
-        /// <param name="rect">The grabbable rect.</param>
+        /// <param name="rect">The draggable rect.</param>
         /// <param name="cursor">The cursor.</param>
         /// <returns>The the mouse delta position.</returns>
-        public static Vector2 SlideRect(Rect rect, MouseCursor cursor = MouseCursor.SlideArrow)
+        public static Vector2 SlideRect(Rect rect, MouseCursor? cursor = null)
         {
             if (!GUI.enabled)
                 return Vector2.zero;
-            EditorGUIUtility.AddCursorRect(rect, cursor);
+            if (cursor.HasValue)
+                EditorGUIUtility.AddCursorRect(rect, cursor.Value);
             int controlId = GUIUtility.GetControlID(FocusType.Passive);
             if (GUI.enabled && Event.current.type == UnityEngine.EventType.MouseDown &&
                 (Event.current.button == 0 && rect.Contains(Event.current.mousePosition)))
@@ -45,14 +45,16 @@ namespace CustomizationInspector.Editor
         }
 
         /// <summary>Creates a rect that can be grabbed and pulled</summary>
-        /// <param name="position">The position.</param>
-        /// <param name="rect">The grabbable rect.</param>
-        /// <returns>The the mouse delta position.</returns>
-        public static Vector2 SlideRect(Vector2 position, Rect rect)
+        /// <param name="defaultPosition">Default position.</param>
+        /// <param name="rect">The draggable rect.</param>
+        /// <param name="cursor">The cursor.</param>
+        /// <returns>The the mouse delta of given rect.</returns>
+        public static Vector2 SlideRect(Vector2 defaultPosition, Rect rect, MouseCursor? cursor = null)
         {
             if (!GUI.enabled)
-                return position;
-            EditorGUIUtility.AddCursorRect(rect, MouseCursor.SlideArrow);
+                return defaultPosition;
+            if (cursor.HasValue)
+                EditorGUIUtility.AddCursorRect(rect, cursor.Value);
             int controlId = GUIUtility.GetControlID(FocusType.Passive);
             if (GUI.enabled && Event.current.type == UnityEngine.EventType.MouseDown &&
                 (Event.current.button == 0 && rect.Contains(Event.current.mousePosition)))
@@ -78,7 +80,7 @@ namespace CustomizationInspector.Editor
                 }
             }
 
-            return position;
+            return defaultPosition;
         }
         
         public static bool DrawDefaultInspector(SerializedObject obj)

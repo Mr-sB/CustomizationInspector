@@ -4,18 +4,18 @@ using System.IO;
 using System.Reflection;
 using CustomizationInspector.Runtime;
 using UnityEditor;
-using UnityEditorInternal;
 using UnityEngine;
 
 namespace CustomizationInspector.Editor
 {
-	[CustomPropertyDrawer(typeof(HideIfAttribute))]
-	internal class HideIfDrawer : PropertyDrawer
+	[CustomPropertyDrawer(typeof(ShowIfAttribute))]
+	internal class ShowIfDrawer : PropertyDrawer
 	{
 		protected BindingFlags mBindingFlags = BindingFlags.Instance | BindingFlags.NonPublic |
 		                                       BindingFlags.Public | BindingFlags.Static;
 		protected static MemberTypes mMemberTypes = MemberTypes.Field | MemberTypes.Property | MemberTypes.Method;
 		private MemberInfo[] memberInfos;
+		protected virtual bool defaultValue => true;
 
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 		{
@@ -30,76 +30,16 @@ namespace CustomizationInspector.Editor
 			return 0;
 		}
 
-		private bool IsShow(SerializedProperty property)
+		protected virtual bool IsShow(SerializedProperty property)
 		{
-			bool isShow = true;
-			//获取对应的脚本
-			var target = property.serializedObject.targetObject;
-
-			//获取对应脚本的类型
-			var	targetType = target.GetType();
-			//获取判断的名称
-			var hideIfAttribute = attribute as HideIfAttribute;
-			if (memberInfos == null)
-				memberInfos = targetType.GetMember(hideIfAttribute.MemberName, mMemberTypes, mBindingFlags);
-			for (int i = 0, len = memberInfos.Length; i < len; i++)
-			{
-				try
-				{
-					switch (memberInfos[i].MemberType)
-					{
-						case MemberTypes.Field:
-							isShow = !(bool)((memberInfos[i] as FieldInfo)?.GetValue(target) ?? !isShow);
-							break;
-						case MemberTypes.Property:
-							isShow = !(bool)((memberInfos[i] as PropertyInfo)?.GetValue(target) ?? !isShow);
-							break;
-						case MemberTypes.Method:
-							isShow = !(bool)((memberInfos[i] as MethodInfo)?.Invoke(target, hideIfAttribute.Objs) ?? !isShow);
-							break;
-					}
-				}
-				catch (Exception e)
-				{
-					Debug.LogError(e);
-				}
-			}
-			return isShow;
-		}
-	}
-
-	[CustomPropertyDrawer(typeof(ShowIfAttribute))]
-	internal class ShowIfDrawer : PropertyDrawer
-	{
-		protected BindingFlags mBindingFlags = BindingFlags.Instance | BindingFlags.NonPublic |
-				BindingFlags.Public | BindingFlags.Static;
-		protected static MemberTypes mMemberTypes = MemberTypes.Field | MemberTypes.Property | MemberTypes.Method;
-		private MemberInfo[] memberInfos;
-
-		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
-		{
-			if (IsShow(property))
-				EditorGUI.PropertyField(position, property, label, true);
-		}
-
-		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
-		{
-			if (IsShow(property))
-				return EditorGUI.GetPropertyHeight(property, label, true);
-			return 0;
-		}
-
-		private bool IsShow(SerializedProperty property)
-		{
-			bool isShow = true;
-			//获取对应的脚本
-			var target = property.serializedObject.targetObject;
-			//获取对应脚本的类型
+			bool isShow = defaultValue;
+			//获取对应的对象
+			var target = property.GetContextObject();
 			var targetType = target.GetType();
 			//获取判断的名称
 			var showIfAttribute = attribute as ShowIfAttribute;
 			if (memberInfos == null)
-				memberInfos = targetType.GetMember(showIfAttribute.MemberName, mMemberTypes, mBindingFlags);
+				memberInfos = targetType.GetMemberInfoIncludeBase(showIfAttribute.MemberName, mMemberTypes, mBindingFlags);
 			for (int i = 0, len = memberInfos.Length; i < len; i++)
 			{
 				try
@@ -124,6 +64,17 @@ namespace CustomizationInspector.Editor
 			}
 
 			return isShow;
+		}
+	}
+	
+	[CustomPropertyDrawer(typeof(HideIfAttribute))]
+	internal class HideIfDrawer : ShowIfDrawer
+	{
+		protected override bool defaultValue => false;
+
+		protected override bool IsShow(SerializedProperty property)
+		{
+			return !base.IsShow(property);
 		}
 	}
 
@@ -157,8 +108,8 @@ namespace CustomizationInspector.Editor
 		
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 		{
-			//获取对应的脚本
-			var target = property.serializedObject.targetObject;
+			//获取对应的对象
+			var target = property.GetContextObject();
 			//获取源数据数组数据
 			IList targetValue = GetTargetList(property);
 			if (targetValue == null)
@@ -199,13 +150,13 @@ namespace CustomizationInspector.Editor
 			{
 				try
 				{
-					Undo.RecordObject(target, target.name);
+					Undo.RecordObject(property.serializedObject.targetObject, property.serializedObject.targetObject.name);
 					fieldInfo.SetValue(target, targetValue[selectedIndex]);
 				}
 				catch (Exception e)
 				{
-					Debug.LogError(string.Format("{0}使用出错!", attribute.GetType().ToString()), target);
-					Debug.LogError(e.Message, target);
+					Debug.LogError(string.Format("{0}使用出错!", attribute.GetType().ToString()), property.serializedObject.targetObject);
+					Debug.LogError(e.Message, property.serializedObject.targetObject);
 				}
 			}
 		}
@@ -219,15 +170,14 @@ namespace CustomizationInspector.Editor
 
 		private IList GetTargetList(SerializedProperty property)
 		{
-			//获取对应的脚本
-			var target = property.serializedObject.targetObject;
-			//获取对应脚本的类型
+			//获取对应的对象
+			var target = property.GetContextObject();
 			var targetType = target.GetType();
 			//获取源数据数组数据
 			IList targetValue = null;
 			ValueDropdownAttribute valueDropdownAttribute = attribute as ValueDropdownAttribute;
 			if (memberInfos == null)
-				memberInfos = targetType.GetMember(valueDropdownAttribute.MemberName, mMemberTypes, mBindingFlags);
+				memberInfos = targetType.GetMemberInfoIncludeBase(valueDropdownAttribute.MemberName, mMemberTypes, mBindingFlags);
 			for (int i = 0, len = memberInfos.Length; i < len; i++)
 			{
 				try

@@ -7,7 +7,7 @@ namespace CustomizationInspector.Editor
     [CustomPropertyDrawer(typeof(SerializableReferenceDictionaryBase), true)]
     public class SerializableReferenceDictionaryDrawer : SerializableDictionaryDrawerBase
     {
-        public SerializableReferenceDictionaryDrawer() : base(false)
+        public SerializableReferenceDictionaryDrawer() : base(true)
         {
         }
     }

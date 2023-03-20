@@ -11,8 +11,11 @@ namespace CustomizationInspector.Runtime
     [Serializable]
     public class SerializableReferenceDictionary<TK, TV> : SerializableReferenceDictionaryBase, ISerializationCallbackReceiver, IDictionary<TK, TV>
     {
-        [SerializeField] protected List<TK> mKeys = new List<TK>();
-        [SerializeField, SerializeReference] protected List<TV> mValues = new List<TV>();
+        [SerializeField] private bool mIsAdd;
+        [SerializeField, SerializeReference, SerializeReferenceSelector] private TK mToAddKey;
+        [SerializeField, SerializeReference, SerializeReferenceSelector] private TV mToAddValue;
+        [SerializeField, SerializeReference, SerializeReferenceSelector] protected List<TK> mKeys = new List<TK>();
+        [SerializeField, SerializeReference, SerializeReferenceSelector] protected List<TV> mValues = new List<TV>();
         protected Dictionary<TK, TV> mDictionary = new Dictionary<TK, TV>();
         public Dictionary<TK, TV> Dictionary => mDictionary;
         //隐式转换

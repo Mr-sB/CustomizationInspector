@@ -43,20 +43,6 @@ namespace CustomizationInspector.Runtime
 
 	[AttributeUsage(AttributeTargets.Field, Inherited = true, AllowMultiple = false)]
 	[Conditional("UNITY_EDITOR")]
-	public class HideIfAttribute : PropertyAttribute
-	{
-
-		public readonly string MemberName;
-		public readonly object[] Objs;
-		public HideIfAttribute(string memberName, params object[] objs)
-		{
-			MemberName = memberName;
-			Objs = objs;
-		}
-	}
-
-	[AttributeUsage(AttributeTargets.Field, Inherited = true, AllowMultiple = false)]
-	[Conditional("UNITY_EDITOR")]
 	public class ShowIfAttribute : PropertyAttribute
 	{
 		public readonly string MemberName;
@@ -65,6 +51,15 @@ namespace CustomizationInspector.Runtime
 		{
 			MemberName = memberName;
 			Objs = objs;
+		}
+	}
+	
+	[AttributeUsage(AttributeTargets.Field, Inherited = true, AllowMultiple = false)]
+	[Conditional("UNITY_EDITOR")]
+	public class HideIfAttribute : ShowIfAttribute
+	{
+		public HideIfAttribute(string memberName, params object[] objs) : base(memberName, objs)
+		{
 		}
 	}
 
