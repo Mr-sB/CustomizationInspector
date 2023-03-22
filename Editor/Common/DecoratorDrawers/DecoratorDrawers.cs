@@ -12,13 +12,13 @@ namespace CustomizationInspector.Editor
 		{
 			var infoBox = attribute as InfoBoxAttribute;
 			position = EditorGUI.IndentedRect(position);
-			position.height -= 2;
+			position.height -= EditorGUIUtility.standardVerticalSpacing;
 			EditorGUI.HelpBox(position, infoBox.Description, (UnityEditor.MessageType) infoBox.MessageType);
 		}
 
 		public override float GetHeight()
 		{
-			return (attribute as InfoBoxAttribute).Height + 2;
+			return (attribute as InfoBoxAttribute).Height + EditorGUIUtility.standardVerticalSpacing;
 		}
 	}
 }

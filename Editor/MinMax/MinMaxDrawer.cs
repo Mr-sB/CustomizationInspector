@@ -32,10 +32,10 @@ namespace CustomizationInspector.Editor
             EditorGUI.indentLevel++;
             labelRect = EditorGUI.IndentedRect(labelRect);
             EditorGUI.indentLevel--;
-            float y = position.y + labelRect.height;
+            float y = position.y + labelRect.height + EditorGUIUtility.standardVerticalSpacing;
             var minLimitRect = new Rect(labelRect.x, y, limitRectWidth, EditorGUIUtility.singleLineHeight);
             var maxLimitRect = new Rect(position.xMax - limitRectWidth, y, limitRectWidth, EditorGUIUtility.singleLineHeight);
-            var sliderRect = new Rect(minLimitRect.xMax + space, y, maxLimitRect.xMin - minLimitRect.xMax - space, EditorGUIUtility.singleLineHeight);
+            var sliderRect = new Rect(minLimitRect.xMax + space, y, maxLimitRect.xMin - minLimitRect.xMax - 2 * space, EditorGUIUtility.singleLineHeight);
             
             if (editModeProperty.boolValue)
             {
@@ -70,7 +70,7 @@ namespace CustomizationInspector.Editor
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
-            return EditorGUIUtility.singleLineHeight * 2;
+            return EditorGUIUtility.singleLineHeight * 2 + EditorGUIUtility.standardVerticalSpacing;
         }
     }
 }

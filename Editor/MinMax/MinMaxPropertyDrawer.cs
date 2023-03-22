@@ -27,10 +27,10 @@ namespace CustomizationInspector.Editor
             EditorGUI.indentLevel++;
             labelRect = EditorGUI.IndentedRect(labelRect);
             EditorGUI.indentLevel--;
-            float y = position.y + labelRect.height;
+            float y = position.y + labelRect.height + EditorGUIUtility.standardVerticalSpacing;
             var minLimitRect = new Rect(labelRect.x, y, limitRectWidth, EditorGUIUtility.singleLineHeight);
             var maxLimitRect = new Rect(position.xMax - limitRectWidth, y, limitRectWidth, EditorGUIUtility.singleLineHeight);
-            var sliderRect = new Rect(minLimitRect.xMax + space, y, maxLimitRect.xMin - minLimitRect.xMax - space, EditorGUIUtility.singleLineHeight);
+            var sliderRect = new Rect(minLimitRect.xMax + space, y, maxLimitRect.xMin - minLimitRect.xMax - 2 * space, EditorGUIUtility.singleLineHeight);
             float minLimit = minMaxLimit.MinLimit;
             float maxLimit = minMaxLimit.MaxLimit;
             EditorGUI.BeginChangeCheck();
@@ -55,7 +55,7 @@ namespace CustomizationInspector.Editor
         {
 	        if (!property.type.Equals(nameof(Vector2)))
 		        return EditorGUI.GetPropertyHeight(property, label, true);
-            return EditorGUIUtility.singleLineHeight * 2;
+            return EditorGUIUtility.singleLineHeight * 2 + EditorGUIUtility.standardVerticalSpacing;
         }
 	}
 }

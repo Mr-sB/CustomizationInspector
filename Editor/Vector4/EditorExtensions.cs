@@ -88,17 +88,17 @@ namespace UnityEditor.Extension
                 Rect labelPosition = EditorGUI.IndentedRect(new Rect(totalPosition.x, totalPosition.y,
                     totalPosition.width, EditorGUIUtility.singleLineHeight));
                 Rect rect = totalPosition;
-                rect.xMin += EditorGUIUtility.labelWidth;
-                if (columns > 1)
-                {
-                    --labelPosition.width;
-                    --rect.xMin;
-                }
+                rect.xMin += EditorGUIUtility.labelWidth + 2f;
+                // if (columns > 1)
+                // {
+                //     --labelPosition.width;
+                //     --rect.xMin;
+                // }
 
                 if (columns == 2)
                 {
-                    float num = (float) ((rect.width - 4.0) / 3.0);
-                    rect.xMax -= num + 2f;
+                    float num = (float) ((rect.width - 8.0) / 3.0);
+                    rect.xMax -= num + 4f;
                 }
 
                 EditorGUI.HandlePrefixLabel(totalPosition, labelPosition, label, id);
@@ -109,7 +109,7 @@ namespace UnityEditor.Extension
                 EditorGUIUtility.singleLineHeight));
             Rect rect1 = totalPosition;
             rect1.xMin += (EditorGUI.indentLevel + 1) * 15f;
-            rect1.yMin += 16f;
+            rect1.yMin += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
             EditorGUI.HandlePrefixLabel(totalPosition, labelPosition1, label, id);
             return rect1;
         }
@@ -120,7 +120,7 @@ namespace UnityEditor.Extension
                 return EditorGUIUtility.singleLineHeight;
             if (EditorGUIUtility.wideMode)
                 return EditorGUIUtility.singleLineHeight;
-            return EditorGUIUtility.singleLineHeight * 2;
+            return EditorGUIUtility.singleLineHeight * 2 + EditorGUIUtility.standardVerticalSpacing;
         }
 
         public static bool LabelHasContent(GUIContent label)

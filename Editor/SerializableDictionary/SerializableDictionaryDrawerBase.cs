@@ -31,7 +31,7 @@ namespace CustomizationInspector.Editor
             {
                 SerializedProperty keysProperty = property.FindPropertyRelative("mKeys");
                 SerializedProperty valuesProperty = property.FindPropertyRelative("mValues");
-                propertyHeight += 2;
+                propertyHeight += EditorGUIUtility.standardVerticalSpacing;
                 EditorGUI.indentLevel++;
                 float elementNameWidth = 80;
                 float btnWidth = 20;
@@ -59,7 +59,7 @@ namespace CustomizationInspector.Editor
                     GUI.backgroundColor = backgroundColor;
                     if (isAddProperty.boolValue)
                     {
-                        propertyHeight += 2;
+                        propertyHeight += EditorGUIUtility.standardVerticalSpacing;
                         SerializedProperty toAddKeyProperty = property.FindPropertyRelative("mToAddKey");
                         SerializedProperty toAddValueProperty = property.FindPropertyRelative("mToAddValue");
                         //显示添加的GUI
@@ -92,19 +92,19 @@ namespace CustomizationInspector.Editor
                             toAddValueProperty.isExpanded = false;
                         }
 
-                        propertyHeight += height + 2;
+                        propertyHeight += height + EditorGUIUtility.standardVerticalSpacing;
                         EditorGUI.LabelField(itemElementNameRect, "AddItem");
                         var labelWidth = EditorGUIUtility.labelWidth;
                         EditorGUIUtility.labelWidth = elementNameWidth;
                         EditorGUI.PropertyField(keyRect, toAddKeyProperty,
                             toAddKeyProperty.hasVisibleChildren &&
-                            keyPropertyHeight > EditorGUIUtility.singleLineHeight + 2
+                            keyPropertyHeight > EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing
                                 ? mToAddContent
                                 : GUIContent.none,
                             true);
                         EditorGUI.PropertyField(valueRect, toAddValueProperty,
                             toAddValueProperty.hasVisibleChildren &&
-                            valuePropertyHeight > EditorGUIUtility.singleLineHeight + 2
+                            valuePropertyHeight > EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing
                                 ? mToAddContent
                                 : GUIContent.none,
                             true);
@@ -149,7 +149,7 @@ namespace CustomizationInspector.Editor
                 //序列化Key Value
                 for (int i = 0, size = keysProperty.arraySize; i < size; i++)
                 {
-                    propertyHeight += 2;
+                    propertyHeight += EditorGUIUtility.standardVerticalSpacing;
                     var delRect = new Rect(valueLabelRect.xMax, position.y + propertyHeight, btnWidth, EditorGUIUtility.singleLineHeight);
                     //删除
                     bool delete = GUI.Button(delRect, "X", EditorStyles.miniButtonMid); //先显示Button，避免按钮点击被覆盖
@@ -186,9 +186,9 @@ namespace CustomizationInspector.Editor
                     var labelWidth = EditorGUIUtility.labelWidth;
                     EditorGUIUtility.labelWidth = elementNameWidth;
                     EditorGUI.PropertyField(keyRect, keyProperty,
-                        keyProperty.hasVisibleChildren && keyPropertyHeight > EditorGUIUtility.singleLineHeight + 2 ? null : GUIContent.none, true);
+                        keyProperty.hasVisibleChildren && keyPropertyHeight > EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing ? null : GUIContent.none, true);
                     EditorGUI.PropertyField(valueRect, valueProperty,
-                        valueProperty.hasVisibleChildren && valuePropertyHeight > EditorGUIUtility.singleLineHeight + 2 ? null : GUIContent.none, true);
+                        valueProperty.hasVisibleChildren && valuePropertyHeight > EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing ? null : GUIContent.none, true);
                     EditorGUIUtility.labelWidth = labelWidth;
                     propertyHeight += height;
                     if (delete)
@@ -221,7 +221,7 @@ namespace CustomizationInspector.Editor
             if (!property.isExpanded) return propertyHeight;
             SerializedProperty keysProperty = property.FindPropertyRelative("mKeys");
             SerializedProperty valuesProperty = property.FindPropertyRelative("mValues");
-            propertyHeight += 2;
+            propertyHeight += EditorGUIUtility.standardVerticalSpacing;
             EditorGUI.indentLevel++;
             propertyHeight += EditorGUIUtility.singleLineHeight;//Key Value Label
             if (mShowAdd)
@@ -229,7 +229,7 @@ namespace CustomizationInspector.Editor
                 SerializedProperty isAddProperty = property.FindPropertyRelative("mIsAdd");
                 if (isAddProperty.boolValue)
                 {
-                    propertyHeight += 2;
+                    propertyHeight += EditorGUIUtility.standardVerticalSpacing;
                     SerializedProperty toAddKeyProperty = property.FindPropertyRelative("mToAddKey");
                     SerializedProperty toAddValueProperty = property.FindPropertyRelative("mToAddValue");
                     //计算属性高度
@@ -243,7 +243,7 @@ namespace CustomizationInspector.Editor
                     if (valuePropertyHeight > height)
                         height = valuePropertyHeight;
 
-                    propertyHeight += height + 2; //Item
+                    propertyHeight += height + EditorGUIUtility.standardVerticalSpacing; //Item
                     propertyHeight += EditorGUIUtility.singleLineHeight; //Add Button
                 }
             }
@@ -251,7 +251,7 @@ namespace CustomizationInspector.Editor
             //序列化Key Value
             for (int i = 0, size = keysProperty.arraySize; i < size; i++)
             {
-                propertyHeight += 2;
+                propertyHeight += EditorGUIUtility.standardVerticalSpacing;
                 //计算属性高度
                 float height = EditorGUIUtility.singleLineHeight;
         
