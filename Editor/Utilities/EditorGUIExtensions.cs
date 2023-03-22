@@ -111,7 +111,7 @@ namespace CustomizationInspector.Editor
             return EditorGUI.EndChangeCheck();
         }
         
-        public static bool DrawPropertiesExcluding(SerializedObject obj, params string[] propertyToExclude)
+        public static bool DrawDefaultInspectorExcluding(SerializedObject obj, params string[] propertyToExclude)
         {
             EditorGUI.BeginChangeCheck();
             obj.UpdateIfRequiredOrScript();
