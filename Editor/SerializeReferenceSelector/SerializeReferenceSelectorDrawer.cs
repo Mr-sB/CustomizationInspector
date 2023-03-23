@@ -43,7 +43,7 @@ namespace CustomizationInspector.Editor
         
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 		{
-			if (property.propertyType == SerializedPropertyType.ManagedReference)
+			if (property.propertyType == SerializedPropertyType.ManagedReference && position.height > 0)
 			{
 				Rect dropdownRect = position;
 				float xOffset = attribute is SerializeReferenceSelectorAttribute selectorAttribute && selectorAttribute.XOffset >= 0

@@ -44,8 +44,16 @@ namespace CustomizationInspector.Editor
 			string[] array = property.propertyPath.Replace("Array.data", "*Array").Split('.');
 			Object targetObject = property.serializedObject.targetObject;
 			if (!targetObject) return null;
+			int len = array.Length;
+			if (len == 0) return targetObject;
+			var lastName = array[array.Length - 1];
+			//End with list/array. Context move up, skip list/array object
+			if (lastName.StartsWith("*Array"))
+				len -= 2;
+			else
+				len -= 1;
 			object obj = targetObject;
-			for (int i = 0; i < array.Length - 1; i++)
+			for (int i = 0; i < len; i++)
 			{
 				if (!array[i].StartsWith("*Array"))
 					obj = obj.GetType().GetFieldInfoIncludeBase(array[i]).GetValue(obj);
