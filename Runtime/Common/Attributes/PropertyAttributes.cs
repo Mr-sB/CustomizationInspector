@@ -230,4 +230,36 @@ namespace CustomizationInspector.Runtime
 			LabelWidth = labelWidth;
 		}
 	}
+	
+	[AttributeUsage(AttributeTargets.Field, Inherited = true, AllowMultiple = false)]
+	[Conditional("UNITY_EDITOR")]
+	public class MinLabelWidthAttribute : PropertyAttribute
+	{
+		public readonly float MinLabelWidth = -1;
+
+		public MinLabelWidthAttribute()
+		{
+		}
+		
+		public MinLabelWidthAttribute(float minLabelWidth)
+		{
+			MinLabelWidth = minLabelWidth;
+		}
+	}
+	
+	[AttributeUsage(AttributeTargets.Field, Inherited = true, AllowMultiple = false)]
+	[Conditional("UNITY_EDITOR")]
+	public class MaxLabelWidthAttribute : PropertyAttribute
+	{
+		public readonly float MaxLabelWidth = -1;
+
+		public MaxLabelWidthAttribute()
+		{
+		}
+		
+		public MaxLabelWidthAttribute(float maxLabelWidth)
+		{
+			MaxLabelWidth = maxLabelWidth;
+		}
+	}
 }

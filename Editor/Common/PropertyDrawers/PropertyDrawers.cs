@@ -336,9 +336,46 @@ namespace CustomizationInspector.Editor
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 		{
 			var oldLabelWidth = EditorGUIUtility.labelWidth;
-			EditorGUIUtility.labelWidth = attribute is LabelWidthAttribute labelWidthAttribute && labelWidthAttribute.LabelWidth >= 0
-				? labelWidthAttribute.LabelWidth
-				: EditorGUIUtility.labelWidth;
+			if (attribute is LabelWidthAttribute labelWidthAttribute && labelWidthAttribute.LabelWidth >= 0)
+				EditorGUIUtility.labelWidth = labelWidthAttribute.LabelWidth;
+			EditorGUI.PropertyField(position, property, label, true);
+			EditorGUIUtility.labelWidth = oldLabelWidth;
+		}
+
+		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+		{
+			return EditorGUI.GetPropertyHeight(property, label, true);
+		}
+	}
+	
+	[CustomPropertyDrawer(typeof(MinLabelWidthAttribute))]
+	internal class MinLabelWidthDrawer : PropertyDrawer
+	{
+		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+		{
+			var oldLabelWidth = EditorGUIUtility.labelWidth;
+			if (attribute is MinLabelWidthAttribute minLabelWidthAttribute && minLabelWidthAttribute.MinLabelWidth >= 0 &&
+			    minLabelWidthAttribute.MinLabelWidth > EditorGUIUtility.labelWidth)
+				EditorGUIUtility.labelWidth = minLabelWidthAttribute.MinLabelWidth;
+			EditorGUI.PropertyField(position, property, label, true);
+			EditorGUIUtility.labelWidth = oldLabelWidth;
+		}
+
+		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+		{
+			return EditorGUI.GetPropertyHeight(property, label, true);
+		}
+	}
+	
+	[CustomPropertyDrawer(typeof(MaxLabelWidthAttribute))]
+	internal class MaxLabelWidthDrawer : PropertyDrawer
+	{
+		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+		{
+			var oldLabelWidth = EditorGUIUtility.labelWidth;
+			if (attribute is MaxLabelWidthAttribute maxLabelWidthAttribute && maxLabelWidthAttribute.MaxLabelWidth >= 0 &&
+			    maxLabelWidthAttribute.MaxLabelWidth < EditorGUIUtility.labelWidth)
+				EditorGUIUtility.labelWidth = maxLabelWidthAttribute.MaxLabelWidth;
 			EditorGUI.PropertyField(position, property, label, true);
 			EditorGUIUtility.labelWidth = oldLabelWidth;
 		}
