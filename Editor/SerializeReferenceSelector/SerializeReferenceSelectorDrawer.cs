@@ -46,10 +46,17 @@ namespace CustomizationInspector.Editor
 			if (property.propertyType == SerializedPropertyType.ManagedReference && position.height > 0)
 			{
 				Rect dropdownRect = position;
-				float xOffset = attribute is SerializeReferenceSelectorAttribute selectorAttribute && selectorAttribute.XOffset >= 0
-					? selectorAttribute.XOffset
-					: EditorGUIUtility.labelWidth;
+				float xOffset = EditorGUIUtility.labelWidth;
+				float xMaxOffset = 0;
+				if (attribute is SerializeReferenceSelectorAttribute selectorAttribute)
+				{
+					if (selectorAttribute.XOffset >= 0)
+						xOffset = selectorAttribute.XOffset;
+					if (xMaxOffset >= 0)
+						xMaxOffset = selectorAttribute.XMaxOffset;
+				}
 				dropdownRect.xMin += xOffset;
+				dropdownRect.xMax -= xMaxOffset;
 				dropdownRect.height = EditorGUIUtility.singleLineHeight;
 				
 				var value = property.managedReferenceValue;
