@@ -9,8 +9,20 @@ namespace CustomizationInspector.Runtime
     public class SerializeReferenceSelectorAttribute : PropertyAttribute
     {
         public int MinLine = 16;
-        public float XOffset = -1;
-        public float XMaxOffset = 0;
+        [Obsolete("Use XMinPadding instead.")]
+        public float XOffset
+        {
+            set => XMinPadding = value;
+            get => XMinPadding;
+        }
+        /// <summary>
+        /// Negtive means use EditorGUIUtility.labelWidth.
+        /// </summary>
+        public float XMinPadding = -1;
+        /// <summary>
+        /// Can not be negtive. Negtive means zero.
+        /// </summary>
+        public float XMaxPadding = 0;
 
         public SerializeReferenceSelectorAttribute()
         {
