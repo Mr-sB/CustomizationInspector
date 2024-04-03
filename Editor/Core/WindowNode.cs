@@ -32,7 +32,7 @@ namespace CustomizationInspector.Editor
         public float? FixedLength;
         public bool IsFixed => FixedLength.HasValue;
 
-        private float? curLengthRatio;
+        public float CurLengthRatio { private set; get; }
 
         public static WindowNodeOption WithDirection(LayoutDirection direction)
         {
@@ -58,6 +58,15 @@ namespace CustomizationInspector.Editor
             {
                 if (node == null) return;
                 node.FixedLength = fixedLength;
+            };
+        }
+        
+        public static WindowNodeOption WithCurLengthRatio(float curLengthRatio)
+        {
+            return node =>
+            {
+                if (node == null) return;
+                node.CurLengthRatio = curLengthRatio;
             };
         }
         
@@ -120,16 +129,16 @@ namespace CustomizationInspector.Editor
                 float lengthRatio = node.MinLengthRatio * minRatioScale;
                 if (flexibleIndex < flexibleCount - 1)
                 {
-                    if (!node.curLengthRatio.HasValue)
-                        node.curLengthRatio = node.MinLengthRatio * initScale;
-                    else if (node.curLengthRatio < lengthRatio)
-                        node.curLengthRatio = lengthRatio;
-                    usedRatio += node.curLengthRatio.Value;
+                    if (node.CurLengthRatio <= 0)
+                        node.CurLengthRatio = node.MinLengthRatio * initScale;
+                    else if (node.CurLengthRatio < lengthRatio)
+                        node.CurLengthRatio = lengthRatio;
+                    usedRatio += node.CurLengthRatio;
                 }
                 else
                 {
                     // Last one
-                    node.curLengthRatio = 1 - usedRatio;
+                    node.CurLengthRatio = 1 - usedRatio;
                 }
                 flexibleIndex++;
             }
@@ -193,7 +202,7 @@ namespace CustomizationInspector.Editor
                         // Calc max ratio
                         float maxRatio = CalcMaxLengthRatio(i, minRatioScale);
                         // Change cur node size
-                        node.curLengthRatio = Mathf.Clamp(newRatio, node.MinLengthRatio * minRatioScale, maxRatio);
+                        node.CurLengthRatio = Mathf.Clamp(newRatio, node.MinLengthRatio * minRatioScale, maxRatio);
                         float remainRatio = 1 - CalcUsedLengthRatio(0, i + 1);
                         // Change after node size
                         ResizeToEnd(i + 1, remainRatio);
@@ -207,7 +216,7 @@ namespace CustomizationInspector.Editor
 
         private float CalcLength(float totalLength)
         {
-            return IsFixed ? (FixedLength ?? 10) : (totalLength * (curLengthRatio ?? MinLengthRatio));
+            return IsFixed ? (FixedLength ?? 10) : (totalLength * CurLengthRatio);
         }
 
         private float CalcMaxLengthRatio(int targetIndex, float minRatioScale)
@@ -220,7 +229,7 @@ namespace CustomizationInspector.Editor
                 if (index < targetIndex)
                 {
                     // Before target node, record cur ratio. Because they can not change size by this drag
-                    maxRatio -= node.curLengthRatio ?? 0;
+                    maxRatio -= node.CurLengthRatio;
                 }
                 else if (index > targetIndex)
                 {
@@ -239,7 +248,7 @@ namespace CustomizationInspector.Editor
             {
                 var node = Children[i];
                 if (node.IsFixed) continue;
-                usedLengthRatio += node.curLengthRatio ?? 0;
+                usedLengthRatio += node.CurLengthRatio;
             }
             return usedLengthRatio;
         }
@@ -251,13 +260,13 @@ namespace CustomizationInspector.Editor
             {
                 var node = Children[i];
                 if (node.IsFixed) continue;
-                sum += Mathf.Max(node.curLengthRatio ?? 0, node.MinLengthRatio);
+                sum += Mathf.Max(node.CurLengthRatio, node.MinLengthRatio);
             }
             for (int i = startIndex, count = Children.Count; i < count; i++)
             {
                 var node = Children[i];
                 if (node.IsFixed) continue;
-                node.curLengthRatio = node.curLengthRatio / sum * remainRatio;
+                node.CurLengthRatio = node.CurLengthRatio / sum * remainRatio;
             }
         }
 
