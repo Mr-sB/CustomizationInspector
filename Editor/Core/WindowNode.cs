@@ -29,10 +29,15 @@ namespace CustomizationInspector.Editor
             set => minLengthRatio = Mathf.Clamp01(value);
             get => minLengthRatio;
         }
-        public float? FixedLength;
+        
+        public float? FixedLength { private set; get; }
         public bool IsFixed => FixedLength.HasValue;
 
         public float CurLengthRatio { private set; get; }
+
+        // Temp cache variables
+        private int? dragTargetNodeIndex;
+        private bool draggable => dragTargetNodeIndex.HasValue;
 
         public static WindowNodeOption WithDirection(LayoutDirection direction)
         {
@@ -94,21 +99,35 @@ namespace CustomizationInspector.Editor
             float totalFixedLength = 0;
             float totalDraggableLength = 0;
             int flexibleCount = 0;
+            int? preFlexibleNodeIndex = null;
             for (int i = 0, count = Children.Count; i < count; i++)
             {
                 var node = Children[i];
-                if (!node.IsFixed)
+                node.dragTargetNodeIndex = null;
+                if (node.IsFixed)
                 {
-                    flexibleCount++;
-                    totalMinRatio += node.MinLengthRatio;
+                    // Between two flexible node
+                    if (preFlexibleNodeIndex.HasValue && FindNextFlexibleNode(i + 1) != null)
+                    {
+                        node.dragTargetNodeIndex = preFlexibleNodeIndex; // Fixed node, drag previous flexible node
+                        totalDraggableLength += DRAGGABLE_SPACE;
+                    }
+                    
+                    totalFixedLength += node.FixedLength.Value;
                 }
                 else
-                    totalFixedLength += node.FixedLength.Value;
-                if (i < count - 1)
                 {
-                    var nextNode = Children[i + 1];
-                    if (!node.IsFixed && !nextNode.IsFixed)
+                    var nextFlexibleNode = FindNextFlexibleNode(i + 1);
+                    // In front of flexible node
+                    if (nextFlexibleNode != null)
+                    {
+                        node.dragTargetNodeIndex = i; // Flexible node, drag itself
                         totalDraggableLength += DRAGGABLE_SPACE;
+                    }
+                    
+                    preFlexibleNodeIndex = i;
+                    flexibleCount++;
+                    totalMinRatio += node.MinLengthRatio;
                 }
             }
 
@@ -147,69 +166,71 @@ namespace CustomizationInspector.Editor
             float usedLength = 0;
 
             // Draw children GUI
-            for (int i = 0, count = Children.Count; i < count; i++)
+            foreach (var node in Children)
             {
-                var node = Children[i];
-                // Calculate rect
-                Rect childRect = rect;
-                float curNodeLength = node.CalcLength(totalLength);
-                switch (Direction)
-                {
-                    case LayoutDirection.Horizontal:
-                        childRect.x += usedLength;
-                        childRect.width = curNodeLength;
-                        break;
-                    case LayoutDirection.Vertical:
-                        childRect.y += usedLength;
-                        childRect.height = curNodeLength;
-                        break;
-                }
-                usedLength += curNodeLength;
-                // Draw
-                node.Draw(childRect);
+                // Draw child window
+                usedLength += DrawChild(node, rect, usedLength, totalLength);
                 
-                // Add draggable space
-                bool draggable = false;
-                if (i < count - 1)
-                {
-                    var nextNode = Children[i + 1];
-                    if (!node.IsFixed && !nextNode.IsFixed)
-                        draggable = true;
-                }
-
-                if (draggable)
-                {
-                    // Draw draggable slider
-                    var dragRect = rect;
-                    float delta = 0;
-                    switch (Direction)
-                    {
-                        case LayoutDirection.Horizontal:
-                            dragRect.x += usedLength;
-                            dragRect.width = DRAGGABLE_SPACE;
-                            delta = EditorGUIExtensions.SlideRect(dragRect, MouseCursor.ResizeHorizontal).x;
-                            break;
-                        case LayoutDirection.Vertical:
-                            dragRect.y += usedLength;
-                            dragRect.height = DRAGGABLE_SPACE;
-                            delta = EditorGUIExtensions.SlideRect(dragRect, MouseCursor.ResizeVertical).y;
-                            break;
-                    }
-
-                    if (delta != 0)
-                    {
-                        float newRatio = Mathf.Clamp01((curNodeLength + delta) / totalLength);
-                        // Calc max ratio
-                        float maxRatio = CalcMaxLengthRatio(i, minRatioScale);
-                        // Change cur node size
-                        node.CurLengthRatio = Mathf.Clamp(newRatio, node.MinLengthRatio * minRatioScale, maxRatio);
-                        float remainRatio = 1 - CalcUsedLengthRatio(0, i + 1);
-                        // Change after node size
-                        ResizeToEnd(i + 1, remainRatio);
-                    }
-                    usedLength += DRAGGABLE_SPACE;
-                }
+                // Draw draggable slider
+                usedLength += DrawDraggableSlider(node, rect, usedLength, totalLength, minRatioScale);
             }
+        }
+
+        private float DrawChild(WindowNode node, Rect rect, float usedLength, float totalLength)
+        {
+            // Calculate rect
+            Rect childRect = rect;
+            float curNodeLength = node.CalcLength(totalLength);
+            switch (Direction)
+            {
+                case LayoutDirection.Horizontal:
+                    childRect.x += usedLength;
+                    childRect.width = curNodeLength;
+                    break;
+                case LayoutDirection.Vertical:
+                    childRect.y += usedLength;
+                    childRect.height = curNodeLength;
+                    break;
+            }
+            // Draw window
+            node.Draw(childRect);
+            return curNodeLength;
+        }
+
+        private float DrawDraggableSlider(WindowNode node, Rect rect, float usedLength, float totalLength, float minRatioScale)
+        {
+            if (!node.draggable) return 0;
+            int dragTargetNodeIndex = node.dragTargetNodeIndex.Value;
+            var dragNode = Children[dragTargetNodeIndex];
+            // Draw draggable slider
+            var dragRect = rect;
+            float delta = 0;
+            switch (Direction)
+            {
+                case LayoutDirection.Horizontal:
+                    dragRect.x += usedLength;
+                    dragRect.width = DRAGGABLE_SPACE;
+                    delta = EditorGUIExtensions.SlideRect(dragRect, MouseCursor.ResizeHorizontal).x;
+                    break;
+                case LayoutDirection.Vertical:
+                    dragRect.y += usedLength;
+                    dragRect.height = DRAGGABLE_SPACE;
+                    delta = EditorGUIExtensions.SlideRect(dragRect, MouseCursor.ResizeVertical).y;
+                    break;
+            }
+
+            if (delta != 0)
+            {
+                float newRatio = Mathf.Clamp01((dragNode.CalcLength(totalLength) + delta) / totalLength);
+                // Calc max ratio
+                float maxRatio = CalcMaxLengthRatio(dragTargetNodeIndex, minRatioScale);
+                // Change cur node size
+                dragNode.CurLengthRatio = Mathf.Clamp(newRatio, dragNode.MinLengthRatio * minRatioScale, maxRatio);
+                float remainRatio = 1 - CalcUsedLengthRatio(0, dragTargetNodeIndex + 1);
+                // Change after node size
+                ResizeToEnd(dragTargetNodeIndex + 1, remainRatio);
+            }
+            return DRAGGABLE_SPACE;
         }
 
         protected abstract void OnGUI(Rect rect);
@@ -268,6 +289,17 @@ namespace CustomizationInspector.Editor
                 if (node.IsFixed) continue;
                 node.CurLengthRatio = node.CurLengthRatio / sum * remainRatio;
             }
+        }
+
+        private WindowNode FindNextFlexibleNode(int startIndex)
+        {
+            for (int i = startIndex, count = Children.Count; i < count; i++)
+            {
+                var node = Children[i];
+                if (!node.IsFixed)
+                    return node;
+            }
+            return null;
         }
 
         public void Add(WindowNode node)
