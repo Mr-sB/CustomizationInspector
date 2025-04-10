@@ -1,99 +1,65 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using UnityEditor;
 using UnityEngine;
 
 namespace CustomizationInspector.Editor
 {
-    public abstract class WindowNode : IEnumerable<WindowNode>
+    public class ContainerNode : WindowNode, IEnumerable<WindowNode>
     {
         public enum LayoutDirection
         {
             Horizontal,
             Vertical,
         }
-
-        public delegate void WindowNodeOption(WindowNode node);
         
-        public const float DRAGGABLE_SPACE = 4;
+        public const float RESIZE_DRAGGABLE_SPACE = 4;
 
-        public string Name;
-        public WindowNode Parent { private set; get; }
-        public readonly List<WindowNode> Children;
-        
-        public LayoutDirection Direction;
-
-        private float minLengthRatio;
-        public float MinLengthRatio
-        {
-            set => minLengthRatio = Mathf.Clamp01(value);
-            get => minLengthRatio;
+        /// <summary>
+        /// Only root ContainerNode has owner
+        /// </summary>
+        internal WindowTree owner;
+        public override WindowTree Owner {
+            get
+            {
+                if (Parent == null && owner != null)
+                    return owner;
+                return base.Owner;
+            }
         }
-        
-        public float? FixedLength { private set; get; }
-        public bool IsFixed => FixedLength.HasValue;
-
-        public float CurLengthRatio { private set; get; }
-
-        // Temp cache variables
-        private int? dragTargetNodeIndex;
-        private bool draggable => dragTargetNodeIndex.HasValue;
+        public readonly List<WindowNode> Children;
+        public LayoutDirection Direction;
+        // public bool AutoRemovable { private set; get; }
 
         public static WindowNodeOption WithDirection(LayoutDirection direction)
         {
             return node =>
             {
-                if (node == null) return;
-                node.Direction = direction;
+                if (node is ContainerNode containerNode)
+                    containerNode.Direction = direction;
             };
         }
         
-        public static WindowNodeOption WithMinLengthRatio(float minLengthRatio)
-        {
-            return node =>
-            {
-                if (node == null) return;
-                node.MinLengthRatio = minLengthRatio;
-            };
-        }
-
-        public static WindowNodeOption WithFixedLength(float? fixedLength)
-        {
-            return node =>
-            {
-                if (node == null) return;
-                node.FixedLength = fixedLength;
-            };
-        }
+        // public static WindowNodeOption WithAutoRemovable(bool autoRemovable)
+        // {
+        //     return node =>
+        //     {
+        //         if (node is ContainerNode containerNode)
+        //             containerNode.AutoRemovable = autoRemovable;
+        //     };
+        // }
         
-        public static WindowNodeOption WithCurLengthRatio(float curLengthRatio)
+        public ContainerNode(string name, params WindowNodeOption[] options) : base(name)
         {
-            return node =>
-            {
-                if (node == null) return;
-                node.CurLengthRatio = curLengthRatio;
-            };
-        }
-        
-        public WindowNode(string name, params WindowNodeOption[] options)
-        {
-            Name = name;
             Children = new List<WindowNode>();
             Direction = LayoutDirection.Horizontal;
-            MinLengthRatio = 0.1f;
-            FixedLength = null;
-            if (options != null && options.Length > 0)
-            {
-                foreach (var option in options)
-                    option?.Invoke(this);
-            }
+            // AutoRemovable = true;
+            InitOptions(options);
         }
 
-        public virtual void Draw(Rect rect)
+        protected override void OnGUI(Rect rect)
         {
-            // Draw self GUI
-            OnGUI(rect);
-            
             // Calc gui rect
             float totalMinRatio = 0;
             float totalFixedLength = 0;
@@ -103,14 +69,14 @@ namespace CustomizationInspector.Editor
             for (int i = 0, count = Children.Count; i < count; i++)
             {
                 var node = Children[i];
-                node.dragTargetNodeIndex = null;
+                node.resizeDragTargetNodeIndex = null;
                 if (node.IsFixed)
                 {
                     // Between two flexible node
                     if (preFlexibleNodeIndex.HasValue && FindNextFlexibleNode(i + 1) != null)
                     {
-                        node.dragTargetNodeIndex = preFlexibleNodeIndex; // Fixed node, drag previous flexible node
-                        totalDraggableLength += DRAGGABLE_SPACE;
+                        node.resizeDragTargetNodeIndex = preFlexibleNodeIndex; // Fixed node, drag previous flexible node
+                        totalDraggableLength += RESIZE_DRAGGABLE_SPACE;
                     }
                     
                     totalFixedLength += node.FixedLength.Value;
@@ -121,8 +87,8 @@ namespace CustomizationInspector.Editor
                     // In front of flexible node
                     if (nextFlexibleNode != null)
                     {
-                        node.dragTargetNodeIndex = i; // Flexible node, drag itself
-                        totalDraggableLength += DRAGGABLE_SPACE;
+                        node.resizeDragTargetNodeIndex = i; // Flexible node, drag itself
+                        totalDraggableLength += RESIZE_DRAGGABLE_SPACE;
                     }
                     
                     preFlexibleNodeIndex = i;
@@ -171,11 +137,11 @@ namespace CustomizationInspector.Editor
                 // Draw child window
                 usedLength += DrawChild(node, rect, usedLength, totalLength);
                 
-                // Draw draggable slider
-                usedLength += DrawDraggableSlider(node, rect, usedLength, totalLength, minRatioScale);
+                // Draw resize draggable slider
+                usedLength += DrawResizeSlider(node, rect, usedLength, totalLength, minRatioScale);
             }
         }
-
+        
         private float DrawChild(WindowNode node, Rect rect, float usedLength, float totalLength)
         {
             // Calculate rect
@@ -196,11 +162,11 @@ namespace CustomizationInspector.Editor
             node.Draw(childRect);
             return curNodeLength;
         }
-
-        private float DrawDraggableSlider(WindowNode node, Rect rect, float usedLength, float totalLength, float minRatioScale)
+        
+        private float DrawResizeSlider(WindowNode node, Rect rect, float usedLength, float totalLength, float minRatioScale)
         {
-            if (!node.draggable) return 0;
-            int dragTargetNodeIndex = node.dragTargetNodeIndex.Value;
+            if (!node.resizable) return 0;
+            int dragTargetNodeIndex = node.resizeDragTargetNodeIndex.Value;
             var dragNode = Children[dragTargetNodeIndex];
             // Draw draggable slider
             var dragRect = rect;
@@ -209,12 +175,12 @@ namespace CustomizationInspector.Editor
             {
                 case LayoutDirection.Horizontal:
                     dragRect.x += usedLength;
-                    dragRect.width = DRAGGABLE_SPACE;
+                    dragRect.width = RESIZE_DRAGGABLE_SPACE;
                     delta = EditorGUIExtensions.SlideRect(dragRect, MouseCursor.ResizeHorizontal).x;
                     break;
                 case LayoutDirection.Vertical:
                     dragRect.y += usedLength;
-                    dragRect.height = DRAGGABLE_SPACE;
+                    dragRect.height = RESIZE_DRAGGABLE_SPACE;
                     delta = EditorGUIExtensions.SlideRect(dragRect, MouseCursor.ResizeVertical).y;
                     break;
             }
@@ -230,14 +196,7 @@ namespace CustomizationInspector.Editor
                 // Change after node size
                 ResizeToEnd(dragTargetNodeIndex + 1, remainRatio);
             }
-            return DRAGGABLE_SPACE;
-        }
-
-        protected abstract void OnGUI(Rect rect);
-
-        private float CalcLength(float totalLength)
-        {
-            return IsFixed ? (FixedLength ?? 10) : (totalLength * CurLengthRatio);
+            return RESIZE_DRAGGABLE_SPACE;
         }
 
         private float CalcMaxLengthRatio(int targetIndex, float minRatioScale)
@@ -290,6 +249,11 @@ namespace CustomizationInspector.Editor
                 node.CurLengthRatio = node.CurLengthRatio / sum * remainRatio;
             }
         }
+        
+        private void ResizeAll()
+        {
+            ResizeToEnd(0, 1);
+        }
 
         private WindowNode FindNextFlexibleNode(int startIndex)
         {
@@ -304,8 +268,22 @@ namespace CustomizationInspector.Editor
 
         public void Add(WindowNode node)
         {
-            Parent = this;
-            Children.Add(node);
+            InsertAt(-1, node);
+        }
+        
+        public void InsertAt(int index, WindowNode node)
+        {
+            node.Parent = this;
+            if (index < 0 || index >= Children.Count)
+                Children.Add(node);
+            else
+                Children.Insert(index, node);
+            ResizeAll();
+        }
+
+        public int IndexOf(WindowNode node)
+        {
+            return Children.IndexOf(node);
         }
 
         /// <summary>
@@ -320,12 +298,33 @@ namespace CustomizationInspector.Editor
                 var node = Children[i];
                 if (node.Name == name)
                 {
+                    node.Parent = null;
                     Children.RemoveAt(i);
+                    ResizeAll();
                     return node;
                 }
             }
             return null;
         }
+        
+        public void RemoveChild(WindowNode node)
+        {
+            if (Children.Remove(node))
+            {
+                node.Parent = null;
+                ResizeAll();
+            }
+        }
+        
+        // public void RemoveChildOnly(WindowNode node)
+        // {
+        //     if (Children.Remove(node) && node is ContainerNode containerNode && containerNode.Children.Count > 0 && containerNode.Parent != null)
+        //     {
+        //         foreach (var child in containerNode.Children)
+        //             containerNode.Parent.Add(child);
+        //         containerNode.Children.Clear();
+        //     }
+        // }
         
         /// <summary>
         /// Only find from children
@@ -353,9 +352,12 @@ namespace CustomizationInspector.Editor
             if (target != null) return target;
             foreach (var node in Children)
             {
-                target = node.Remove(name);
-                if (target != null)
-                    return target;
+                if (node is ContainerNode containerNode)
+                {
+                    target = containerNode.Remove(name);
+                    if (target != null)
+                        return target;
+                }
             }
             return null;
         }
@@ -370,11 +372,23 @@ namespace CustomizationInspector.Editor
             if (Name == name) return this;
             foreach (var node in Children)
             {
-                var target = node.Find(name);
-                if (target != null)
-                    return target;
+                if (node.Name == name)
+                    return node;
+                if (node is ContainerNode containerNode)
+                {
+                    var target = containerNode.Find(name);
+                    if (target != null)
+                        return target;
+                }
             }
             return null;
+        }
+
+        public override void Query(Rect queryRect, [NotNull] HashSet<WindowNode> results)
+        {
+            if (!Position.Overlaps(queryRect)) return;
+            foreach (var child in Children)
+                child.Query(queryRect, results);
         }
 
         public IEnumerator<WindowNode> GetEnumerator()
@@ -382,8 +396,11 @@ namespace CustomizationInspector.Editor
             yield return this;
             foreach (var child in Children)
             {
-                foreach (var node in child)
-                    yield return node;
+                if (child is ContainerNode containerNode)
+                    foreach (var node in containerNode)
+                        yield return node;
+                else
+                    yield return child;
             }
         }
 

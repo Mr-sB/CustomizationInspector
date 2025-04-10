@@ -1,4 +1,6 @@
+using System;
 using System.Linq;
+using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
@@ -9,7 +11,7 @@ namespace CustomizationInspector.Editor
         /// <summary>Creates a rect that can be grabbed and pulled</summary>
         /// <param name="rect">The draggable rect.</param>
         /// <param name="cursor">The cursor.</param>
-        /// <returns>The the mouse delta position.</returns>
+        /// <returns>The mouse delta position.</returns>
         public static Vector2 SlideRect(Rect rect, MouseCursor? cursor = null)
         {
             if (!GUI.enabled)
@@ -48,7 +50,7 @@ namespace CustomizationInspector.Editor
         /// <param name="defaultPosition">Default position.</param>
         /// <param name="rect">The draggable rect.</param>
         /// <param name="cursor">The cursor.</param>
-        /// <returns>The the mouse delta of given rect.</returns>
+        /// <returns>The mouse delta of given rect.</returns>
         public static Vector2 SlideRect(Vector2 defaultPosition, Rect rect, MouseCursor? cursor = null)
         {
             if (!GUI.enabled)
@@ -124,5 +126,13 @@ namespace CustomizationInspector.Editor
             obj.ApplyModifiedProperties();
             return EditorGUI.EndChangeCheck();
         }
+
+        // private static readonly Func<Rect, Rect> unclipDelegate = (Func<Rect, Rect>)Delegate.CreateDelegate(typeof(Func<Rect, Rect>), typeof(GUI).Assembly.GetType("UnityEngine.GUIClip")
+        //     .GetMethod("Unclip", new Type[] { typeof(Rect) }));
+        //
+        // public static Rect Unclip(Rect rect)
+        // {
+        //     return unclipDelegate(rect);
+        // }
     }
 }
