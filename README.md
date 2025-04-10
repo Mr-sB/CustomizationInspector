@@ -34,3 +34,7 @@ Customize Unity3D inspector by attribute(such as Button, ReadOnly, HideIf etc.) 
 * Vector4
 
 ![image](Screenshots~/Vector4Example.png)
+* ReplaceWindow
+
+![image](Screenshots~/ReplaceWindowNode.gif)
+
