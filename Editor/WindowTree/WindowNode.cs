@@ -115,12 +115,24 @@ namespace CustomizationInspector.Editor
                     option?.Invoke(this);
             }
         }
+
+        public bool IsFixed()
+        {
+            if (Parent == null) return false;
+            return IsFixed(Parent.Direction == ContainerNode.LayoutDirection.Horizontal);
+        }
         
         public bool IsFixed(bool horizontal)
         {
             return GetFixedLength(horizontal).HasValue;
         }
 
+        public float? GetFixedLength()
+        {
+            if (Parent == null) return null;
+            return GetFixedLength(Parent.Direction == ContainerNode.LayoutDirection.Horizontal);
+        }
+        
         public float? GetFixedLength(bool horizontal)
         {
             return horizontal ? FixedWidth : FixedHeight;
