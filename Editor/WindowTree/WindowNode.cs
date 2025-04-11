@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -36,8 +37,8 @@ namespace CustomizationInspector.Editor
             get => minLengthRatio;
         }
         
-        public float? FixedLength { private set; get; }
-        public bool IsFixed => FixedLength.HasValue;
+        public float? FixedWidth { private set; get; }
+        public float? FixedHeight { private set; get; }
         
         public float CurLengthRatio { internal set; get; }
 
@@ -56,12 +57,21 @@ namespace CustomizationInspector.Editor
             };
         }
         
-        public static WindowNodeOption WithFixedLength(float? fixedLength)
+        public static WindowNodeOption WithFixedWidth(float? fixedWidth)
         {
             return node =>
             {
                 if (node == null) return;
-                node.FixedLength = fixedLength;
+                node.FixedWidth = fixedWidth;
+            };
+        }
+        
+        public static WindowNodeOption WithFixedHeight(float? fixedHeight)
+        {
+            return node =>
+            {
+                if (node == null) return;
+                node.FixedHeight = fixedHeight;
             };
         }
         
@@ -92,7 +102,8 @@ namespace CustomizationInspector.Editor
         {
             Name = name;
             MinLengthRatio = 0.1f;
-            FixedLength = null;
+            FixedWidth = null;
+            FixedHeight = null;
             Replaceable = true;
         }
         
@@ -105,13 +116,28 @@ namespace CustomizationInspector.Editor
             }
         }
         
-        internal float CalcLength(float totalLength)
+        public bool IsFixed(bool horizontal)
         {
-            return IsFixed ? (FixedLength ?? 10) : (totalLength * CurLengthRatio);
+            return GetFixedLength(horizontal).HasValue;
+        }
+
+        public float? GetFixedLength(bool horizontal)
+        {
+            return horizontal ? FixedWidth : FixedHeight;
+        }
+        
+        internal float CalcLength(bool horizontal, float totalLength)
+        {
+            float? fixedLength = GetFixedLength(horizontal);
+            return fixedLength ?? (totalLength * CurLengthRatio);
         }
 
         public void Draw(Rect rect)
         {
+            if (FixedWidth.HasValue)
+                rect.width = Mathf.Min(rect.width, FixedWidth.Value);
+            if (FixedHeight.HasValue)
+                rect.height = Mathf.Min(rect.width, FixedHeight.Value);
             Position = rect;
             DoDraw(rect);
         }

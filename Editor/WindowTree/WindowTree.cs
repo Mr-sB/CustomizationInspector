@@ -137,7 +137,7 @@ namespace CustomizationInspector.Editor
                 AutoAdd(draggingNode, closestNode, insertBefore, direction);
             }
             
-            queryResults.Clear();
+            queryResults?.Clear();
             draggingNode = null;
             hotControlId = 0;
             draggingRect = Rect.zero;
@@ -302,22 +302,26 @@ namespace CustomizationInspector.Editor
             // Create new container
             var parent = toSplit.Parent;
             int index = parent.IndexOf(toSplit);
+            var ratio = toSplit.CurLengthRatio;
+            float newRatio = ratio * 1 / (1 - ratio);
             parent.RemoveChild(toSplit);
             ContainerNode newContainerNode = new ContainerNode(AutoContainerNodeName,
                 //ContainerNode.WithAutoRemovable(true),
                 ContainerNode.WithDirection(direction),
-                WindowNode.WithCurLengthRatio(toSplit.CurLengthRatio));
+                WindowNode.WithCurLengthRatio(newRatio));
             parent.InsertAt(index, newContainerNode);
-            node.CurLengthRatio = SnapRatio;
-            toSplit.CurLengthRatio = 1 - SnapRatio;
             if (insertBefore)
             {
                 newContainerNode.Add(node);
+                node.CurLengthRatio = SnapRatio;
+                toSplit.CurLengthRatio = 1 - SnapRatio;
                 newContainerNode.Add(toSplit);
             }
             else
             {
                 newContainerNode.Add(toSplit);
+                node.CurLengthRatio = SnapRatio;
+                toSplit.CurLengthRatio = 1 - SnapRatio;
                 newContainerNode.Add(node);
             }
         }

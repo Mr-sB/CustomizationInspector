@@ -66,11 +66,12 @@ namespace CustomizationInspector.Editor
             float totalDraggableLength = 0;
             int flexibleCount = 0;
             int? preFlexibleNodeIndex = null;
+            bool isHorizontal = Direction == LayoutDirection.Horizontal;
             for (int i = 0, count = Children.Count; i < count; i++)
             {
                 var node = Children[i];
                 node.resizeDragTargetNodeIndex = null;
-                if (node.IsFixed)
+                if (node.IsFixed(isHorizontal))
                 {
                     // Between two flexible node
                     if (preFlexibleNodeIndex.HasValue && FindNextFlexibleNode(i + 1) != null)
@@ -79,7 +80,7 @@ namespace CustomizationInspector.Editor
                         totalDraggableLength += RESIZE_DRAGGABLE_SPACE;
                     }
                     
-                    totalFixedLength += node.FixedLength.Value;
+                    totalFixedLength += node.GetFixedLength(isHorizontal)!.Value;
                 }
                 else
                 {
@@ -109,7 +110,7 @@ namespace CustomizationInspector.Editor
             for (int i = 0, count = Children.Count; i < count; i++)
             {
                 var node = Children[i];
-                if (node.IsFixed) continue;
+                if (node.IsFixed(isHorizontal)) continue;
                 // Adjust length ratio
                 float lengthRatio = node.MinLengthRatio * minRatioScale;
                 if (flexibleIndex < flexibleCount - 1)
@@ -144,9 +145,10 @@ namespace CustomizationInspector.Editor
         
         private float DrawChild(WindowNode node, Rect rect, float usedLength, float totalLength)
         {
+            bool isHorizontal = Direction == LayoutDirection.Horizontal;
             // Calculate rect
             Rect childRect = rect;
-            float curNodeLength = node.CalcLength(totalLength);
+            float curNodeLength = node.CalcLength(isHorizontal, totalLength);
             switch (Direction)
             {
                 case LayoutDirection.Horizontal:
@@ -187,7 +189,8 @@ namespace CustomizationInspector.Editor
 
             if (delta != 0)
             {
-                float newRatio = Mathf.Clamp01((dragNode.CalcLength(totalLength) + delta) / totalLength);
+                bool isHorizontal = Direction == LayoutDirection.Horizontal;
+                float newRatio = Mathf.Clamp01((dragNode.CalcLength(isHorizontal, totalLength) + delta) / totalLength);
                 // Calc max ratio
                 float maxRatio = CalcMaxLengthRatio(dragTargetNodeIndex, minRatioScale);
                 // Change cur node size
@@ -202,10 +205,11 @@ namespace CustomizationInspector.Editor
         private float CalcMaxLengthRatio(int targetIndex, float minRatioScale)
         {
             float maxRatio = 1;
+            bool isHorizontal = Direction == LayoutDirection.Horizontal;
             for (int index = 0, count = Children.Count; index < count; index++)
             {
                 var node = Children[index];
-                if (node.IsFixed) continue;
+                if (node.IsFixed(isHorizontal)) continue;
                 if (index < targetIndex)
                 {
                     // Before target node, record cur ratio. Because they can not change size by this drag
@@ -224,10 +228,11 @@ namespace CustomizationInspector.Editor
         {
             float usedLengthRatio = 0;
             int end = Mathf.Min(Children.Count, startIndex + length);
+            bool isHorizontal = Direction == LayoutDirection.Horizontal;
             for (int i = startIndex; i < end; i++)
             {
                 var node = Children[i];
-                if (node.IsFixed) continue;
+                if (node.IsFixed(isHorizontal)) continue;
                 usedLengthRatio += node.CurLengthRatio;
             }
             return usedLengthRatio;
@@ -236,16 +241,17 @@ namespace CustomizationInspector.Editor
         private void ResizeToEnd(int startIndex, float remainRatio)
         {
             float sum = 0;
+            bool isHorizontal = Direction == LayoutDirection.Horizontal;
             for (int i = startIndex; i < Children.Count; i++)
             {
                 var node = Children[i];
-                if (node.IsFixed) continue;
+                if (node.IsFixed(isHorizontal)) continue;
                 sum += Mathf.Max(node.CurLengthRatio, node.MinLengthRatio);
             }
             for (int i = startIndex, count = Children.Count; i < count; i++)
             {
                 var node = Children[i];
-                if (node.IsFixed) continue;
+                if (node.IsFixed(isHorizontal)) continue;
                 node.CurLengthRatio = node.CurLengthRatio / sum * remainRatio;
             }
         }
@@ -257,10 +263,11 @@ namespace CustomizationInspector.Editor
 
         private WindowNode FindNextFlexibleNode(int startIndex)
         {
+            bool isHorizontal = Direction == LayoutDirection.Horizontal;
             for (int i = startIndex, count = Children.Count; i < count; i++)
             {
                 var node = Children[i];
-                if (!node.IsFixed)
+                if (!node.IsFixed(isHorizontal))
                     return node;
             }
             return null;
